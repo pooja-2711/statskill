@@ -1,8 +1,25 @@
-
+import math
 def analyze_performance(topic_scores):
+    if not isinstance(topic_scores, dict):
+        raise ValueError("Topic scores must be a dictionary.")
+
     results = {}
 
     for topic, score in topic_scores.items():
+
+        if not isinstance(topic, str) or not topic.strip():
+            raise ValueError("Topic names cannot be empty.")
+
+        if (
+            isinstance(score, bool)
+            or not isinstance(score, (int, float))
+            or not math.isfinite(score)
+        ):
+            raise ValueError(f"Invalid score for {topic}.")
+
+        if not 0 <= score <= 100:
+            raise ValueError(f"Score for {topic} must be between 0 and 100.")
+
         if score < 50:
             status = "Weak"
             level = "Beginner"
@@ -46,8 +63,12 @@ def recommend_learning(analysis):
 
 
 def create_next_quiz_plan(analysis, total_questions=10):
-    if total_questions < 1:
-        raise ValueError("Total questions must be at least 1.")
+    if (
+        isinstance(total_questions, bool)
+        or not isinstance(total_questions, int)
+        or total_questions < 1 
+    ):
+        raise ValueError("Total questions must be a positive integer.")
 
     # Give more weight to weaker topics.
     weights = {}
@@ -118,20 +139,50 @@ def create_next_quiz_plan(analysis, total_questions=10):
 
 
 def update_performance_history(history, new_scores):
-    for topic, score in new_scores.items():
+    validate_learning_history(history)
+
+    validated_scores = analyze_performance(new_scores)
+
+    for topic, details in validated_scores.items():
         history.setdefault(topic, [])
-        history[topic].append(score)
+        history[topic].append(details["score"])
 
     return history
 
 
 def calculate_average_scores(history):
+    validate_learning_history(history)    
     averages = {}
 
     for topic, scores in history.items():
+        if not scores:
+            continue
+
         averages[topic] = round(sum(scores) / len(scores), 2)
 
     return averages
+
+def get_latest_scores(history):
+    validate_learning_history(history)    
+    latest_scores = {}
+
+    for topic, scores in history.items():
+        if scores:
+            latest_scores[topic] = scores[-1]
+
+    return latest_scores
+
+def analyze_learning_history(history):
+    latest_scores = get_latest_scores(history)
+    average_scores = calculate_average_scores(history)
+
+    performance = analyze_performance(latest_scores)
+
+    return {
+        "performance_analysis": performance,
+        "latest_scores": latest_scores,
+        "average_scores": average_scores
+    }
 
 def compare_quiz_attempts(previous_scores, latest_scores):
     comparison = {}
@@ -166,4 +217,103 @@ def compare_quiz_attempts(previous_scores, latest_scores):
 
     return comparison
 
+def analyze_progress_trend(history):
+    validate_learning_history(history)
+    trends = {}
+
+    for topic, scores in history.items():
+        if len(scores) < 2:
+            trends[topic] = {
+                "trend": "Insufficient data",
+                "change": None
+            }
+            continue
+
+        change = scores[-1] - scores[0]
+
+        if change >= 5:
+            trend = "Improving"
+        elif change <= -5:
+            trend = "Declining"
+        else:
+            trend = "Maintaining"
+
+        trends[topic] = {
+            "trend": trend,
+            "change": change
+        }
+
+    return trends
+
+def recommend_based_on_trend(trends):
+    recommendations = []
+
+    for topic, details in trends.items():
+        trend = details["trend"]
+
+        if trend == "Improving":
+            advice = "Continue learning and try harder questions."
+
+        elif trend == "Declining":
+            advice = "Revise the topic and practise more questions."
+
+        elif trend == "Maintaining":
+            advice = "Practise additional questions to improve."
+
+        else:
+            advice = "Complete more quizzes to track your progress."
+
+        recommendations.append({
+            "topic": topic,
+            "trend": trend,
+            "recommendation": advice
+        })
+
+    return recommendations
+
+def generate_learning_report(history, total_questions=10):
+    learning_analysis = analyze_learning_history(history)
+
+    trends = analyze_progress_trend(history)
+
+    trend_recommendations = recommend_based_on_trend(trends)
+
+    quiz_plan = create_next_quiz_plan(
+        learning_analysis["performance_analysis"],
+        total_questions
+    )
+
+    return {
+        "latest_scores": learning_analysis["latest_scores"],
+        "average_scores": learning_analysis["average_scores"],
+        "performance_analysis": learning_analysis["performance_analysis"],
+        "progress_trends": trends,
+        "recommendations": trend_recommendations,
+        "next_quiz_plan": quiz_plan
+    }
+
+def validate_learning_history(history):
+    if not isinstance(history, dict):
+        raise ValueError("Learning history must be a dictionary.")
+
+    for topic, scores in history.items():
+
+        if not isinstance(topic, str) or not topic.strip():
+            raise ValueError("Topic names cannot be empty.")
+
+        if not isinstance(scores, list):
+            raise ValueError(f"Scores for {topic} must be a list.")
+
+        for score in scores:
+            if (
+                isinstance(score, bool)
+                or not isinstance(score, (int, float))
+                or not math.isfinite(score)
+                or not 0 <= score <= 100
+            ):
+                raise ValueError(
+                    f"Invalid historical score for {topic}."
+                )
+
+    return True
 
