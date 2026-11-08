@@ -6,6 +6,7 @@ from app.api.users import router as users_router
 from app.api.auth import router as auth_router
 from app.api.courses import router as courses_router
 from app.api import lessons
+from app.api.quizzes import router as quizzes_router
 
 app = FastAPI(
     title="Statskill API",
@@ -45,3 +46,4 @@ app.include_router(users_router)
 app.include_router(auth_router)
 app.include_router(courses_router)
 app.include_router(lessons.router)
+app.include_router(quizzes_router)
