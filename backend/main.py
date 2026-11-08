@@ -7,6 +7,8 @@ from app.api.auth import router as auth_router
 from app.api.courses import router as courses_router
 from app.api import lessons
 from app.api.quizzes import router as quizzes_router
+from app.api.attempts import router as attempts_router
+
 
 app = FastAPI(
     title="Statskill API",
@@ -20,7 +22,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "http://192.168.1.17:5173"
+        "http://192.168.1.17:5173",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -41,9 +43,10 @@ def health_check():
     return {"status": "healthy"}
 
 
-# Register API routers
+# REGISTER API ROUTERS
 app.include_router(users_router)
 app.include_router(auth_router)
 app.include_router(courses_router)
 app.include_router(lessons.router)
 app.include_router(quizzes_router)
+app.include_router(attempts_router)
