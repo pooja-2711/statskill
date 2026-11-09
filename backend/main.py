@@ -9,7 +9,7 @@ from app.api.quizzes import router as quizzes_router
 from app.api.attempts import router as attempts_router
 from app.api.progress import router as progress_router
 from app.api.skills import router as skills_router
-
+from app.api.learning_paths import router as learning_paths_router
 app = FastAPI(
     title="Statskill API",
     description="Backend for the Statskill learning platform",
@@ -53,3 +53,4 @@ app.include_router(attempts_router)
 app.include_router(progress_router)
 app.include_router(progress_router)
 app.include_router(skills_router)
+app.include_router(learning_paths_router)
