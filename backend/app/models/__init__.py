@@ -6,6 +6,8 @@ from app.models.question import Question
 from app.models.attempt import QuizAttempt
 from app.models.attempt_answer import AttemptAnswer
 from app.models.progress import Progress
+from app.models.skill import Skill
+from app.models.user_skill import UserSkill
 
 __all__ = [
     "User",
@@ -16,4 +18,6 @@ __all__ = [
     "QuizAttempt",
     "AttemptAnswer",
     "Progress",
+    "Skill",
+    "UserSkill",
 ]
