@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,6 +7,7 @@ from app.api.courses import router as courses_router
 from app.api import lessons
 from app.api.quizzes import router as quizzes_router
 from app.api.attempts import router as attempts_router
+from app.api.progress import router as progress_router
 
 
 app = FastAPI(
@@ -50,3 +50,4 @@ app.include_router(courses_router)
 app.include_router(lessons.router)
 app.include_router(quizzes_router)
 app.include_router(attempts_router)
+app.include_router(progress_router)
