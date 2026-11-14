@@ -1,0 +1,59 @@
+{
+    "questions": [
+        {
+            "question": "What is the main motivation for ecosystem accounting?",
+            "options": {
+                "A": "To measure the economic activities of ecosystems",
+                "B": "To shed light on the non-market activities that relate to ecosystems",
+                "C": "To track the size of an ecosystem asset in terms of spatial area",
+                "D": "To record the value of stocks of assets given the expected flow of ecosystem services"
+            },
+            "correct_answer": "B",
+            "explanation": "Ecosystem accounting aims to shed light on the non-market activities that relate to ecosystems and integrate this information with relevant market related data."
+        },
+        {
+            "question": "What type of accounts are ecosystem service flows?",
+            "options": {
+                "A": "Stock variables",
+                "B": "Flow variables",
+                "C": "Macroeconomic accounts",
+                "D": "Environmental-Economic accounts"
+            },
+            "correct_answer": "B",
+            "explanation": "Ecosystem service flows are flow variables, which help to understand the benefits derived from the ecosystems in the economy."
+        },
+        {
+            "question": "What is the purpose of the Ocean Accounts Framework?",
+            "options": {
+                "A": "To track the size of an ecosystem asset in terms of spatial area",
+                "B": "To measure the quality of an ecosystem by tracking indicators of ecosystem health",
+                "C": "To record the value of stocks of assets given the expected flow of ecosystem services",
+                "D": "To integrate four key components: Macroeconomic Accounts, Environmental-Economic Accounts, Ecosystem Extent Accounts, and Ecosystem Condition Accounts"
+            },
+            "correct_answer": "D",
+            "explanation": "The Ocean Accounts Framework integrates four key components: Macroeconomic Accounts, Environmental-Economic Accounts, Ecosystem Extent Accounts, and Ecosystem Condition Accounts."
+        },
+        {
+            "question": "What is the main difference between ecosystem services accounts and the system of national accounts?",
+            "options": {
+                "A": "Ecosystem services accounts are based on transactions or actual exchanges in the economy",
+                "B": "Ecosystem services accounts are not based on transactions or actual exchanges in the economy",
+                "C": "Ecosystem services accounts are similar to the system of national accounts",
+                "D": "Ecosystem services accounts are not similar to the system of national accounts"
+            },
+            "correct_answer": "A",
+            "explanation": "Ecosystem services accounts are similar to the system of national accounts, which is based on transactions or actual exchanges in the economy."
+        },
+        {
+            "question": "What is the purpose of the Environmental-Economic Accounts?",
+            "options": {
+                "A": "To track the size of an ecosystem asset in terms of spatial area",
+                "B": "To measure the quality of an ecosystem by tracking indicators of ecosystem health",
+                "C": "To record the value of stocks of assets given the expected flow of ecosystem services",
+                "D": "To explain the relationship between mankind and the environment"
+            },
+            "correct_answer": "D",
+            "explanation": "The Environmental-Economic Accounts aim to explain the relationship between mankind and the environment."
+        }
+    ]
+}
