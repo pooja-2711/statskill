@@ -12,6 +12,7 @@ from app.api.skills import router as skills_router
 from app.api.learning_paths import router as learning_paths_router
 from app.api.ai_tutor import router as ai_tutor_router
 from app.api.lesson_resources import router as lesson_resources_router
+from app.api.personalization import router as personalization_router
 app = FastAPI(
     title="Statskill API",
     description="Backend for the Statskill learning platform",
@@ -57,3 +58,4 @@ app.include_router(skills_router)
 app.include_router(learning_paths_router)
 app.include_router(ai_tutor_router)
 app.include_router(lesson_resources_router)
+app.include_router(personalization_router)
