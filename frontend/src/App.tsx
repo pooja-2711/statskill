@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 
 import "./App.css";
@@ -34,6 +34,24 @@ function PageLoader() {
   );
 }
 
+function NotFound() {
+  return (
+    <div style={{
+      minHeight: "70vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+      padding: "24px"
+    }}>
+      <h1>404 - Page Not Found</h1>
+      <p>The page you are looking for does not exist.</p>
+      <a href="/" style={{ color: "#2563eb" }}>Return to Home</a>
+    </div>
+  );
+}
+
 function App() {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -60,6 +78,7 @@ function App() {
           <Route path="/lessons" element={<Lessons />} />
           <Route path="/quiz" element={<Quiz />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );
