@@ -1,4 +1,4 @@
-ï»¿import math
+import math
 def analyze_performance(topic_scores):
     if not isinstance(topic_scores, dict):
         raise ValueError("Topic scores must be a dictionary.")
