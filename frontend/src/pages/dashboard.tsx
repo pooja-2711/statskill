@@ -1,82 +1,228 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import { useAuth } from "../context/AuthContext";
-import { getDashboard } from "../services/dashboardServices";
-import type { DashboardData } from "../mocks/dashboard";
-import ProgressBar from "../components/progressCard";
+import {
+  getDashboard,
+  type DashboardData,
+} from "../services/dashboardServices";
 
 export default function Dashboard() {
   const { user } = useAuth();
+
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getDashboard().then(setData).catch(() => setError("Could not load dashboard"));
+    let active = true;
+
+    async function loadDashboard() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const dashboardData = await getDashboard();
+
+        if (active) {
+          setData(dashboardData);
+        }
+      } catch {
+        if (active) {
+          setError("Could not load your dashboard. Please try again.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadDashboard();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  if (error) return <p className="error">{error}</p>;
-  if (!data) return <p className="muted">Loading dashboard...</p>;
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <h1>Loading your dashboard...</h1>
+        <p className="muted">
+          Fetching your latest learning information.
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard">
+        <h1>Dashboard</h1>
+        <p className="error">{error}</p>
+        <button
+          className="btn"
+          onClick={() => window.location.reload()}
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const formatValue = (value: number | null) =>
+    value === null ? "—" : value;
 
   const stats = [
-    { label: "Courses enrolled", value: data.stats.enrolled },
-    { label: "Lessons completed", value: data.stats.lessonsDone },
-    { label: "Average quiz score", value: `${data.stats.avgScore}%` },
-    { label: "Day streak", value: `🔥 ${data.stats.streak}` },
+    {
+      label: "Courses started",
+      value: formatValue(data.stats.enrolled),
+    },
+    {
+      label: "Lessons completed",
+      value: formatValue(data.stats.lessonsDone),
+    },
+    {
+      label: "Average quiz score",
+      value:
+        data.stats.avgScore === null
+          ? "—"
+          : `${data.stats.avgScore}%`,
+    },
+    {
+      label: "Available courses",
+      value: data.stats.availableCourses,
+    },
   ];
 
   return (
     <div className="dashboard">
-      <h1>Welcome back, {user?.full_name?.split(" ")[0]} 👋</h1>
-      <p className="muted">Here is your learning summary.</p>
+      <h1>
+        Welcome back, {user?.full_name?.split(" ")[0] || "Learner"} 👋
+      </h1>
 
+      <p className="muted">
+        Here is your latest learning summary.
+      </p>
+
+      {/* API loading warnings */}
+      {data.warnings.length > 0 && (
+        <div className="panel">
+          <h3>Some information is unavailable</h3>
+          {data.warnings.map((warning) => (
+            <p className="muted" key={warning}>
+              {warning}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {/* Statistics */}
       <div className="stats-grid">
-        {stats.map((s) => (
-          <div className="stat-card" key={s.label}>
-            <div className="stat-value">{s.value}</div>
-            <div className="muted">{s.label}</div>
+        {stats.map((stat) => (
+          <div className="stat-card" key={stat.label}>
+            <div className="stat-value">{stat.value}</div>
+            <div className="muted">{stat.label}</div>
           </div>
         ))}
       </div>
 
+      {/* Skills and learning activity */}
       <div className="two-col">
         <section className="panel">
           <h2>Your skills</h2>
-          {data.skills.map((s) => (
-            <div className="skill-row" key={s.name}>
-              <div className="skill-head">
-                <span>{s.name}</span>
-                <span>{s.score}%</span>
+
+          {data.skills.length === 0 ? (
+            <p className="muted">
+              No skills have been added to your profile yet.
+            </p>
+          ) : (
+            data.skills.map((skill) => (
+              <div className="skill-row" key={skill.id}>
+                <div className="skill-head">
+                  <span>{skill.name}</span>
+                  <span className="badge">
+                    {skill.proficiency}
+                  </span>
+                </div>
               </div>
-              <ProgressBar value={s.score} />
-            </div>
-          ))}
+            ))
+          )}
+
+          <Link to="/profile" className="btn">
+            Manage skills
+          </Link>
         </section>
 
         <section className="panel">
-          <h2>Weak topics</h2>
-          <div className="chips">
-            {data.weakTopics.map((t) => (
-              <span className="chip" key={t}>{t}</span>
-            ))}
+          <h2>Quiz activity</h2>
+
+          <div className="skill-row">
+            <div className="skill-head">
+              <span>Submitted quizzes</span>
+              <strong>
+                {formatValue(data.insights.submittedAttempts)}
+              </strong>
+            </div>
           </div>
-          <p className="muted" style={{ marginTop: 14 }}>
-            We recommend practising these first.
+
+          <div className="skill-row">
+            <div className="skill-head">
+              <span>Passed quizzes</span>
+              <strong>
+                {formatValue(data.insights.passedAttempts)}
+              </strong>
+            </div>
+          </div>
+
+          <p className="muted">
+            Keep practising and track your quiz performance here.
           </p>
         </section>
       </div>
 
+      {/* Available courses */}
       <section className="panel">
-        <h2>Recommended for you</h2>
-        <div className="course-grid">
-          {data.recommended.map((c) => (
-            <div className="course-card" key={c.id}>
-              <span className="badge">{c.level}</span>
-              <h3>{c.title}</h3>
-              <p className="muted">{c.lessons} lessons</p>
-              <Link to="/courses" className="btn">Start</Link>
-            </div>
-          ))}
-        </div>
+        <h2>Explore available courses</h2>
+
+        {data.recommended.length === 0 ? (
+          <p className="muted">
+            No published courses are currently available.
+          </p>
+        ) : (
+          <div className="course-grid">
+            {data.recommended.map((course) => (
+              <div className="course-card" key={course.id}>
+                <span className="badge">{course.level}</span>
+
+                <h3>{course.title}</h3>
+
+                <p className="muted">
+                  {course.lessons === null
+                    ? "Lesson count unavailable"
+                    : `${course.lessons} lessons`}
+                </p>
+
+                <Link
+                  to={`/lessons?course_id=${course.id}`}
+                  className="btn"
+                >
+                  Start learning
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <p style={{ marginTop: 20 }}>
+          <Link to="/courses" className="btn">
+            View all courses
+          </Link>
+        </p>
       </section>
     </div>
   );

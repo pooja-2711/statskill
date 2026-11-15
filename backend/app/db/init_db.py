@@ -1,6 +1,9 @@
-﻿from app.db.base import Base
+﻿
+from app.db.base import Base
 from app.db.session import engine
-from app.models import User, Course
+
+# Import all models so SQLAlchemy registers their tables.
+from app import models
 
 
 def create_tables():
@@ -10,3 +13,4 @@ def create_tables():
 
 if __name__ == "__main__":
     create_tables()
+
