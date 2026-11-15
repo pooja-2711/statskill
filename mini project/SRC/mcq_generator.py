@@ -158,6 +158,84 @@ def generate_mcqs(topic, number_of_questions=5):
             print("Skipped question: Duplicate question.")
             continue
 
+        # Verify correct answer using the PDF context
+        try:
+            correct_answer = question["correct_answer"]
+            correct_option = options[correct_answer]
+
+            verification_response = ollama.chat(
+                model="llama3.2:3b",
+                format="json",
+                options={"temperature": 0},
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a strict educational answer verifier. "
+                            "Check whether the given correct answer AND "
+                            "explanation are directly supported by the "
+                            "provided PDF context. Do not use outside knowledge. "
+                            "If unsupported, ambiguous, or incorrect, return "
+                            "NOT_SUPPORTED. Return SUPPORTED only when both "
+                            "are supported by the context. "
+                            "Provide an exact short evidence quote from the context. "
+                            "Return valid JSON only."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": f"""
+                        PDF CONTEXT:
+                        {context}
+
+                        QUESTION:
+                        {question['question']}
+
+                        OPTIONS:
+                        {options}
+
+                        PROPOSED CORRECT ANSWER:
+                        {correct_answer}. {correct_option}
+
+                        EXPLANATION:
+                        {question['explanation']}
+
+                        Return this JSON:
+                        {{
+                            "verdict": "SUPPORTED or NOT_SUPPORTED",
+                            "evidence": "Exact quote from the PDF context"
+                        }}
+                        """
+                    }
+                ]
+            )
+
+            verification_data = json.loads(
+                verification_response["message"]["content"]
+            )
+
+            verdict = verification_data.get("verdict", "").strip().upper()
+            evidence = verification_data.get("evidence", "").strip()
+
+            # Require evidence to appear in the retrieved PDF context
+            normalized_context = " ".join(context.split()).casefold()
+            normalized_evidence = " ".join(evidence.split()).casefold()
+
+            if (
+                verdict != "SUPPORTED"
+                or not normalized_evidence
+                or normalized_evidence not in normalized_context
+            ):
+                print("Skipped question: Answer not verified against PDF.")
+                continue
+
+            print("Answer verified successfully.")
+
+        except Exception as e:
+            print("Skipped question: Verification failed.")
+            print("Reason:", e)
+            continue
+
         seen_questions.add(question_text)
         valid_questions.append(question)
 
