@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,6 +14,13 @@ from app.api.learning_paths import router as learning_paths_router
 from app.api.ai_tutor import router as ai_tutor_router
 from app.api.lesson_resources import router as lesson_resources_router
 from app.api.personalization import router as personalization_router
+from app.api.pdf_learning import router as pdf_learning_router
+from app.api.pdf_ai import router as pdf_ai_router
+from app.api.statistics_assistant import (
+    router as statistics_assistant_router,
+)
+
+
 app = FastAPI(
     title="Statskill API",
     description="Backend for the Statskill learning platform",
@@ -33,6 +41,7 @@ app.add_middleware(
 )
 
 
+# ROOT ENDPOINT
 @app.get("/")
 def home():
     return {
@@ -41,6 +50,7 @@ def home():
     }
 
 
+# HEALTH CHECK
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
@@ -59,3 +69,10 @@ app.include_router(learning_paths_router)
 app.include_router(ai_tutor_router)
 app.include_router(lesson_resources_router)
 app.include_router(personalization_router)
+
+# PDF LEARNING ASSISTANT
+app.include_router(pdf_learning_router)
+app.include_router(pdf_ai_router)
+
+# ENVISTATS STATISTICS ASSISTANT
+app.include_router(statistics_assistant_router)

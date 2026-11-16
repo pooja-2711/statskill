@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+﻿import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 
 import "./App.css";
@@ -18,6 +18,7 @@ const Progress = lazy(() => import("./pages/progress"));
 const Quiz = lazy(() => import("./pages/quiz"));
 const LearningPath = lazy(() => import("./pages/LearningPath"));
 const AITutor = lazy(() => import("./pages/AITutor"));
+const StatisticsAssistant = lazy(() => import("./pages/StatisticsAssistant"));
 
 function PageLoader() {
   return (
@@ -75,6 +76,7 @@ function App() {
           <Route path="/learning-path" element={<LearningPath />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/ai-tutor" element={<AITutor />} />
+          <Route path="/statistics-assistant" element={<StatisticsAssistant />} />
           <Route path="/lessons" element={<Lessons />} />
           <Route path="/quiz" element={<Quiz />} />
         </Route>
@@ -85,3 +87,4 @@ function App() {
 }
 
 export default App;
+

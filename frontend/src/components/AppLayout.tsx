@@ -1,4 +1,4 @@
-
+﻿
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -10,6 +10,7 @@ const links = [
   { to: "/learning-path", label: "Learning Path" },
   { to: "/progress", label: "Progress" },
   { to: "/ai-tutor", label: "AI Tutor" },
+  { to: "/statistics-assistant", label: "Statistics Assistant" },
   { to: "/profile", label: "Profile" },
 ];
 
@@ -64,3 +65,4 @@ export default function AppLayout() {
     </div>
   );
 }
+

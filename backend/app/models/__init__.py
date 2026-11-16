@@ -15,6 +15,7 @@ from app.models.learning_path_course import LearningPathCourse
 from app.models.learning_path_enrollment import LearningPathEnrollment
 from app.models.ai_conversation import AIConversation
 from app.models.ai_message import AIMessage
+from app.models.pdf_document import PDFDocument
 
 __all__ = [
     "User",
@@ -33,4 +34,7 @@ __all__ = [
     "LearningPathEnrollment",
     "AIConversation",
     "AIMessage",
+    "PDFDocument",
 ]
+
+

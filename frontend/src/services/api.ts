@@ -1,4 +1,4 @@
-
+﻿
 import axios from "axios";
 
 const api = axios.create({
@@ -128,4 +128,138 @@ export const chatWithAITutor = async (
   return response.data;
 };
 
+// STATISTICS ASSISTANT TYPES
+// =========================
+
+export interface StatisticsPassage {
+  content: string;
+  distance: number | null;
+  page?: number | null;
+  source?: string | null;
+  filename?: string | null;
+}
+export interface StatisticsSearchResponse {
+  question: string;
+  results: StatisticsPassage[];
+  count: number;
+}
+
+// =========================
+// STATISTICS ASSISTANT API
+// =========================
+
+export const searchStatistics = async (
+  question: string,
+  limit = 5
+): Promise<StatisticsSearchResponse> => {
+  const response = await api.post(
+    "/statistics-assistant/search",
+    { question, limit }
+  );
+
+  return response.data;
+};
+
+// =========================
+// PDF LEARNING ASSISTANT TYPES
+// =========================
+
+export interface PDFUploadResponse {
+  message: string;
+  document: {
+    id: number;
+    filename: string;
+    page_count: number;
+    chunk_count: number;
+    status: string;
+  };
+}
+
+export interface PDFDocumentInfo {
+  id: number;
+  filename: string;
+  page_count: number;
+  status: string;
+  created_at: string | null;
+}
+
+export interface PDFAskResponse {
+  document_id: number;
+  filename: string;
+  question: string;
+  answer: string;
+  source_pages: number[];
+  model: string;
+}
+
+export interface PDFQuizQuestion {
+  question: string;
+  options: string[];
+  correct_answer: string;
+  explanation: string;
+  page: number | null;
+  type: "academic" | "job_assessment";
+}
+
+export interface PDFQuizResponse {
+  document_id: number;
+  filename: string;
+  question_count: number;
+  difficulty: string;
+  model: string;
+  questions: PDFQuizQuestion[];
+}
+
+// =========================
+// PDF LEARNING ASSISTANT API
+// =========================
+
+export const uploadPDF = async (
+  file: File
+): Promise<PDFUploadResponse> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await api.post(
+    "/pdf-learning/upload",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+export const getPDFDocuments = async (): Promise<PDFDocumentInfo[]> => {
+  const response = await api.get("/pdf-learning/documents");
+  return response.data;
+};
+
+export const askPDFQuestion = async (
+  documentId: number,
+  question: string
+): Promise<PDFAskResponse> => {
+  const response = await api.post("/pdf-learning/ask", {
+    document_id: documentId,
+    question,
+  });
+
+  return response.data;
+};
+
+export const generatePDFQuiz = async (
+  documentId: number
+): Promise<PDFQuizResponse> => {
+  const response = await api.post("/pdf-learning/quiz", {
+    document_id: documentId,
+  });
+
+  return response.data;
+};
+
+
 export default api;
+

@@ -1,4 +1,4 @@
-
+﻿
 import os
 import secrets
 
@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 SECRET_KEY = os.getenv("SECRET_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not SECRET_KEY:
     raise ValueError(
@@ -16,3 +17,4 @@ if not SECRET_KEY:
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
