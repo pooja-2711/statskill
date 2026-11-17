@@ -54,6 +54,8 @@ export interface DashboardData {
   stats: {
     enrolled: number | null;
     lessonsDone: number | null;
+    totalLessons: number | null;
+    completionPercentage: number | null;
     avgScore: number | null;
     availableCourses: number;
   };
@@ -219,6 +221,8 @@ export async function getDashboard(): Promise<DashboardData> {
     stats: {
       enrolled: overallProgress?.total_courses ?? null,
       lessonsDone: overallProgress?.completed_lessons ?? null,
+      totalLessons: overallProgress?.total_lessons ?? null,
+      completionPercentage: overallProgress?.completion_percentage ?? null,
       avgScore,
       availableCourses: availableCourses.length,
     },

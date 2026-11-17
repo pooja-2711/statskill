@@ -1,66 +1,59 @@
-﻿
-import { useEffect, useState, type FormEvent } from "react";
-
+﻿import { useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
+import { FileText, UploadCloud, X } from "lucide-react";
 import {
-  searchStatistics,
   uploadPDF,
   getPDFDocuments,
   askPDFQuestion,
   generatePDFQuiz,
-  type StatisticsPassage,
   type PDFUploadResponse,
   type PDFDocumentInfo,
   type PDFAskResponse,
   type PDFQuizResponse,
 } from "../services/api";
+import "../tools.css";
+
+function apiError(err: unknown, fallback: string): string {
+  const detail = (err as { response?: { data?: { detail?: unknown } } })
+    ?.response?.data?.detail;
+  return typeof detail === "string" ? detail : fallback;
+}
+
+function isPdf(file: File): boolean {
+  return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+}
 
 export default function StatisticsAssistant() {
-  // PDF upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] =
-    useState<PDFUploadResponse | null>(null);
+  const [uploadResult, setUploadResult] = useState<PDFUploadResponse | null>(null);
   const [uploadError, setUploadError] = useState("");
 
-  // PDF documents state
   const [pdfDocuments, setPdfDocuments] = useState<PDFDocumentInfo[]>([]);
   const [selectedPdfId, setSelectedPdfId] = useState<number | "">("");
-  const [loadingPDFs, setLoadingPDFs] = useState(false);
-
-  // PDF AI state
   const [pdfQuestion, setPdfQuestion] = useState("");
   const [pdfAnswer, setPdfAnswer] = useState<PDFAskResponse | null>(null);
   const [askingPDF, setAskingPDF] = useState(false);
   const [pdfAIError, setPdfAIError] = useState("");
+  const [loadingPDFs, setLoadingPDFs] = useState(false);
 
-  // PDF Quiz state
   const [quiz, setQuiz] = useState<PDFQuizResponse | null>(null);
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
   const [quizError, setQuizError] = useState("");
-  const [selectedAnswers, setSelectedAnswers] =
-    useState<Record<number, string>>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
-  // EnviStats state
-  const [question, setQuestion] = useState("");
-  const [passages, setPassages] = useState<StatisticsPassage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [searched, setSearched] = useState(false);
-
-  // Load uploaded PDFs
   async function loadPDFDocuments() {
     try {
       setLoadingPDFs(true);
-
       const documents = await getPDFDocuments();
       setPdfDocuments(documents);
 
       if (documents.length > 0) {
         setSelectedPdfId((current) =>
-          documents.some((doc) => doc.id === current)
-            ? current
-            : documents[0].id
+          documents.some((doc) => doc.id === current) ? current : documents[0].id
         );
       } else {
         setSelectedPdfId("");
@@ -73,101 +66,27 @@ export default function StatisticsAssistant() {
   }
 
   useEffect(() => {
-    loadPDFDocuments();
+    void loadPDFDocuments();
   }, []);
 
-  // Ask AI about PDF
-  async function handleAskPDF(event: FormEvent<HTMLFormElement>) {
+  function chooseFile(candidate: File | null | undefined) {
+    if (!candidate) return;
+    if (!isPdf(candidate)) {
+      setUploadError("Only PDF files are supported.");
+      return;
+    }
+    setUploadError("");
+    setUploadResult(null);
+    setFile(candidate);
+  }
+
+  function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
-
-    if (!selectedPdfId) {
-      setPdfAIError("Please select an uploaded PDF.");
-      return;
-    }
-
-    if (pdfQuestion.trim().length < 3) {
-      setPdfAIError("Please enter a question with at least 3 characters.");
-      return;
-    }
-
-    try {
-      setAskingPDF(true);
-      setPdfAIError("");
-      setPdfAnswer(null);
-
-      const response = await askPDFQuestion(
-        selectedPdfId,
-        pdfQuestion.trim()
-      );
-
-      setPdfAnswer(response);
-    } catch (err) {
-      const message = (
-        err as {
-          response?: { data?: { detail?: string } };
-        }
-      )?.response?.data?.detail;
-
-      setPdfAIError(message || "Unable to get an answer from Gemini.");
-    } finally {
-      setAskingPDF(false);
-    }
+    setDragging(false);
+    if (uploading) return;
+    chooseFile(event.dataTransfer.files?.[0]);
   }
 
-  // Generate PDF quiz
-  async function handleGenerateQuiz() {
-    if (!selectedPdfId) {
-      setQuizError("Please select an uploaded PDF first.");
-      return;
-    }
-
-    try {
-      setGeneratingQuiz(true);
-      setQuizError("");
-      setQuiz(null);
-      setSelectedAnswers({});
-      setQuizSubmitted(false);
-
-      const response = await generatePDFQuiz(selectedPdfId);
-
-      setQuiz(response);
-    } catch (err) {
-      const message = (
-        err as {
-          response?: { data?: { detail?: string } };
-        }
-      )?.response?.data?.detail;
-
-      setQuizError(message || "Unable to generate the quiz. Please try again.");
-    } finally {
-      setGeneratingQuiz(false);
-    }
-  }
-
-  // Submit quiz
-  function handleSubmitQuiz() {
-    if (!quiz) return;
-
-    if (Object.keys(selectedAnswers).length !== quiz.questions.length) {
-      setQuizError("Please answer all 10 questions before submitting.");
-      return;
-    }
-
-    setQuizError("");
-    setQuizSubmitted(true);
-  }
-
-  // Calculate quiz score
-  const quizScore = quiz
-    ? quiz.questions.reduce(
-        (score, item, index) =>
-          score +
-          (selectedAnswers[index] === item.correct_answer ? 1 : 0),
-        0
-      )
-    : 0;
-
-  // Upload PDF
   async function handleUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -185,6 +104,7 @@ export default function StatisticsAssistant() {
 
       setUploadResult(response);
       setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
 
       await loadPDFDocuments();
 
@@ -194,440 +114,320 @@ export default function StatisticsAssistant() {
       setSelectedAnswers({});
       setQuizSubmitted(false);
       setQuizError("");
-
-      const input = document.getElementById(
-        "pdf-upload"
-      ) as HTMLInputElement | null;
-
-      if (input) input.value = "";
     } catch (err) {
-      const message = (
-        err as {
-          response?: { data?: { detail?: string } };
-        }
-      )?.response?.data?.detail;
-
-      setUploadError(message || "Unable to upload this PDF.");
+      setUploadError(apiError(err, "Unable to upload this PDF."));
     } finally {
       setUploading(false);
     }
   }
 
-  // Search EnviStats
-  async function handleSearch(event: FormEvent<HTMLFormElement>) {
+  async function handleAskPDF(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (question.trim().length < 3) {
-      setError("Please enter a question with at least 3 characters.");
+    if (!selectedPdfId) {
+      setPdfAIError("Please select an uploaded PDF.");
+      return;
+    }
+    if (pdfQuestion.trim().length < 3) {
+      setPdfAIError("Please enter a question with at least 3 characters.");
       return;
     }
 
     try {
-      setLoading(true);
-      setError("");
-      setSearched(false);
-      setPassages([]);
-
-      const response = await searchStatistics(question.trim(), 5);
-
-      setPassages(response.results);
-      setSearched(true);
+      setAskingPDF(true);
+      setPdfAIError("");
+      setPdfAnswer(null);
+      setPdfAnswer(await askPDFQuestion(selectedPdfId, pdfQuestion.trim()));
     } catch (err) {
-      const message = (
-        err as {
-          response?: { data?: { detail?: string } };
-        }
-      )?.response?.data?.detail;
-
-      setError(message || "Unable to search the statistics database.");
+      setPdfAIError(apiError(err, "Unable to get an answer from Gemini."));
     } finally {
-      setLoading(false);
+      setAskingPDF(false);
     }
   }
 
+  async function handleGenerateQuiz() {
+    if (!selectedPdfId) {
+      setQuizError("Please select an uploaded PDF first.");
+      return;
+    }
+
+    try {
+      setGeneratingQuiz(true);
+      setQuizError("");
+      setQuiz(null);
+      setSelectedAnswers({});
+      setQuizSubmitted(false);
+      setQuiz(await generatePDFQuiz(selectedPdfId));
+    } catch (err) {
+      setQuizError(apiError(err, "Unable to generate the quiz. Please try again."));
+    } finally {
+      setGeneratingQuiz(false);
+    }
+  }
+
+  function handleSubmitQuiz() {
+    if (!quiz) return;
+
+    if (Object.keys(selectedAnswers).length !== quiz.questions.length) {
+      setQuizError(`Please answer all ${quiz.questions.length} questions before submitting.`);
+      return;
+    }
+
+    setQuizError("");
+    setQuizSubmitted(true);
+  }
+
+  const quizScore = quiz
+    ? quiz.questions.reduce(
+        (score, item, index) => score + (selectedAnswers[index] === item.correct_answer ? 1 : 0),
+        0
+      )
+    : 0;
+
+  const completedDocs = pdfDocuments.filter((doc) => doc.status === "completed");
+
   return (
-    <div style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
-      <h1>PDF Learning Assistant</h1>
+    <div className="tl-page">
+      <div>
+        <h1 className="tl-h1">
+          <FileText size={26} className="tl-gold" /> PDF Learning Assistant
+        </h1>
+        <p className="tl-sub">Upload your own PDF documents and use AI-powered learning tools.</p>
+      </div>
 
-      <p>
-        Upload your own PDF documents and use AI-powered learning tools.
-      </p>
-
-      {/* PDF UPLOAD */}
-      <section
-        style={{
-          marginTop: "24px",
-          padding: "20px",
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-        }}
-      >
-        <h2>Upload your PDF</h2>
-
-        <p>
-          Upload textbooks, newspapers, study notes, reports or other PDF
-          documents.
+      {/* ---------- upload ---------- */}
+      <section className="tl-card">
+        <h2 className="tl-h2">Upload your PDF</h2>
+        <p className="tl-sub" style={{ marginBottom: 14 }}>
+          Textbooks, newspapers, study notes, reports or other PDF documents.
         </p>
 
-        <form onSubmit={handleUpload}>
+        <form className="tl-stack" onSubmit={handleUpload}>
+          <div
+            className={`tl-drop${dragging ? " active" : ""}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => !uploading && fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                if (!uploading) fileInputRef.current?.click();
+              }
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+          >
+            <UploadCloud size={36} />
+            <strong>Drag and drop your PDF here</strong>
+            <span>or click to browse your files</span>
+          </div>
+
           <input
+            ref={fileInputRef}
             id="pdf-upload"
             type="file"
             accept=".pdf,application/pdf"
-            onChange={(event) =>
-              setFile(event.target.files?.[0] || null)
-            }
+            hidden
+            onChange={(event) => chooseFile(event.target.files?.[0])}
             disabled={uploading}
           />
 
-          {file && <p>Selected: {file.name}</p>}
+          {file && (
+            <div className="tl-file">
+              <FileText size={18} className="tl-gold" />
+              <span>{file.name}</span>
+              <button
+                type="button"
+                aria-label="Remove file"
+                onClick={() => {
+                  setFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                disabled={uploading}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={uploading || !file}
-            style={{
-              marginTop: "12px",
-              padding: "10px 20px",
-              border: "none",
-              borderRadius: "6px",
-              cursor: uploading || !file ? "not-allowed" : "pointer",
-            }}
-          >
-            {uploading ? "Uploading and processing..." : "Upload PDF"}
-          </button>
+          <div>
+            <button type="submit" className="tl-btn" disabled={uploading || !file}>
+              {uploading ? "Uploading and processing..." : "Upload PDF"}
+            </button>
+          </div>
         </form>
 
-        {uploadError && (
-          <p style={{ color: "red", marginTop: "16px" }}>
-            {uploadError}
-          </p>
-        )}
+        {uploadError && <p className="tl-error" style={{ marginTop: 14 }}>{uploadError}</p>}
 
         {uploadResult && (
-          <div
-            style={{
-              marginTop: "20px",
-              padding: "16px",
-              border: "1px solid #4caf50",
-              borderRadius: "8px",
-            }}
-          >
-            <h3>PDF uploaded successfully!</h3>
+          <div className="tl-success" style={{ marginTop: 16 }}>
+            <strong>PDF uploaded successfully!</strong>
             <p>File: {uploadResult.document.filename}</p>
-            <p>Pages: {uploadResult.document.page_count}</p>
-            <p>Processed text chunks: {uploadResult.document.chunk_count}</p>
+            <p>Pages: {uploadResult.document.page_count} | Text chunks: {uploadResult.document.chunk_count}</p>
             <p>Status: {uploadResult.document.status}</p>
-            <p>Your document is now stored in your account.</p>
           </div>
         )}
       </section>
 
-      {/* PDF AI ASSISTANT */}
-      <section
-        style={{
-          marginTop: "28px",
-          padding: "20px",
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-        }}
-      >
-        <h2>Ask AI about your PDF</h2>
-
-        <p>
+      {/* ---------- ask ---------- */}
+      <section className="tl-card">
+        <h2 className="tl-h2">Ask AI about your PDF</h2>
+        <p className="tl-sub" style={{ marginBottom: 14 }}>
           Select one of your uploaded PDFs and ask questions about its content.
         </p>
 
-        <form onSubmit={handleAskPDF}>
-          <label htmlFor="pdf-select">Select your PDF</label>
-
-          <select
-            id="pdf-select"
-            value={selectedPdfId}
-            onChange={(event) => {
-              setSelectedPdfId(
-                event.target.value ? Number(event.target.value) : ""
-              );
-              setPdfAnswer(null);
-              setPdfAIError("");
-              setQuiz(null);
-              setQuizError("");
-              setSelectedAnswers({});
-              setQuizSubmitted(false);
-            }}
-            disabled={loadingPDFs || askingPDF || generatingQuiz}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "10px",
-              marginTop: "8px",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-            }}
-          >
-            <option value="">
-              {loadingPDFs ? "Loading PDFs..." : "Choose an uploaded PDF"}
-            </option>
-
-            {pdfDocuments
-              .filter((doc) => doc.status === "completed")
-              .map((doc) => (
+        <form className="tl-stack" onSubmit={handleAskPDF}>
+          <div>
+            <label className="tl-label" htmlFor="pdf-select">Select your PDF</label>
+            <select
+              id="pdf-select"
+              className="tl-select"
+              value={selectedPdfId}
+              onChange={(event) => {
+                setSelectedPdfId(event.target.value ? Number(event.target.value) : "");
+                setPdfAnswer(null);
+                setPdfAIError("");
+                setQuiz(null);
+                setQuizError("");
+                setSelectedAnswers({});
+                setQuizSubmitted(false);
+              }}
+              disabled={loadingPDFs || askingPDF || generatingQuiz}
+            >
+              <option value="">{loadingPDFs ? "Loading PDFs..." : "Choose an uploaded PDF"}</option>
+              {completedDocs.map((doc) => (
                 <option key={doc.id} value={doc.id}>
                   {doc.filename} ({doc.page_count} pages)
                 </option>
               ))}
-          </select>
+            </select>
+          </div>
 
           <textarea
+            className="tl-field"
             value={pdfQuestion}
             onChange={(event) => setPdfQuestion(event.target.value)}
             placeholder="Ask something about your PDF..."
             rows={4}
             maxLength={2000}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "12px",
-              marginTop: "14px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              resize: "vertical",
-              boxSizing: "border-box",
-            }}
           />
 
-          <button
-            type="submit"
-            disabled={
-              askingPDF ||
-              !selectedPdfId ||
-              pdfQuestion.trim().length < 3
-            }
-            style={{
-              marginTop: "12px",
-              padding: "10px 20px",
-              border: "none",
-              borderRadius: "6px",
-              cursor: askingPDF ? "wait" : "pointer",
-            }}
-          >
-            {askingPDF ? "Gemini is thinking..." : "Ask AI"}
-          </button>
+          <div>
+            <button
+              type="submit"
+              className="tl-btn"
+              disabled={askingPDF || !selectedPdfId || pdfQuestion.trim().length < 3}
+            >
+              {askingPDF ? "Gemini is thinking..." : "Ask AI"}
+            </button>
+          </div>
         </form>
 
-        {pdfAIError && (
-          <p style={{ color: "red", marginTop: "16px" }}>
-            {pdfAIError}
-          </p>
-        )}
+        {pdfAIError && <p className="tl-error" style={{ marginTop: 14 }}>{pdfAIError}</p>}
 
         {pdfAnswer && (
-          <article
-            style={{
-              marginTop: "20px",
-              padding: "16px",
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-            }}
-          >
+          <article className="tl-answer" style={{ marginTop: 16 }}>
             <h3>AI Answer</h3>
-
-            <p>
-              <strong>Document:</strong> {pdfAnswer.filename}
-            </p>
-
-            <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
-              {pdfAnswer.answer}
-            </div>
-
-            <p style={{ marginTop: "16px", fontSize: "13px" }}>
-              <strong>Source pages:</strong>{" "}
-              {pdfAnswer.source_pages.length > 0
-                ? pdfAnswer.source_pages.join(", ")
-                : "Not available"}
-            </p>
-
-            <p style={{ fontSize: "12px", color: "#777" }}>
-              Powered by {pdfAnswer.model}
+            <p className="tl-note" style={{ margin: "0 0 10px" }}>Document: {pdfAnswer.filename}</p>
+            <div className="body">{pdfAnswer.answer}</div>
+            <p className="tl-meta">
+              Source pages:{" "}
+              {pdfAnswer.source_pages.length > 0 ? pdfAnswer.source_pages.join(", ") : "Not available"}
+              {" | "}Powered by {pdfAnswer.model}
             </p>
           </article>
         )}
 
-        {!loadingPDFs &&
-          pdfDocuments.filter((doc) => doc.status === "completed").length ===
-            0 && (
-            <p style={{ marginTop: "14px" }}>
-              Upload a PDF first to start asking questions.
-            </p>
-          )}
+        {!loadingPDFs && completedDocs.length === 0 && (
+          <p className="tl-note" style={{ marginTop: 14 }}>Upload a PDF first to start asking questions.</p>
+        )}
       </section>
 
-      {/* PDF QUIZ */}
-      <section
-        style={{
-          marginTop: "28px",
-          padding: "20px",
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-        }}
-      >
-        <h2>Generate Quiz from PDF</h2>
-
-        <p>
-          Test your understanding with 10 medium-difficulty questions
-          generated from your selected PDF. Questions include academic
-          concepts and practical job-assessment scenarios.
+      {/* ---------- quiz ---------- */}
+      <section className="tl-card">
+        <h2 className="tl-h2">Generate Quiz from PDF</h2>
+        <p className="tl-sub" style={{ marginBottom: 14 }}>
+          Test your understanding with 10 medium-difficulty questions generated from your selected
+          PDF, covering academic concepts and practical job-assessment scenarios.
         </p>
 
         <button
           type="button"
-          onClick={handleGenerateQuiz}
+          className="tl-btn"
+          onClick={() => void handleGenerateQuiz()}
           disabled={!selectedPdfId || generatingQuiz || loadingPDFs}
-          style={{
-            marginTop: "8px",
-            padding: "10px 20px",
-            border: "none",
-            borderRadius: "6px",
-            cursor:
-              !selectedPdfId || generatingQuiz ? "not-allowed" : "pointer",
-          }}
         >
-          {generatingQuiz
-            ? "Generating your quiz..."
-            : quiz
-              ? "Generate New Quiz"
-              : "Generate Quiz"}
+          {generatingQuiz ? "Generating your quiz..." : quiz ? "Generate New Quiz" : "Generate Quiz"}
         </button>
 
-        {quizError && (
-          <p style={{ color: "red", marginTop: "16px" }}>
-            {quizError}
-          </p>
-        )}
+        {quizError && <p className="tl-error" style={{ marginTop: 14 }}>{quizError}</p>}
 
         {quiz && (
-          <div style={{ marginTop: "24px" }}>
-            <h3>{quiz.filename}</h3>
-
-            <p>
-              {quiz.question_count} Questions | {quiz.difficulty} Difficulty
-            </p>
-
-            <p style={{ fontSize: "13px", color: "#777" }}>
-              Powered by {quiz.model}
-            </p>
+          <div className="tl-stack" style={{ marginTop: 20 }}>
+            <div>
+              <h3 className="tl-h2">{quiz.filename}</h3>
+              <p className="tl-note">
+                {quiz.question_count} questions | {quiz.difficulty} difficulty | Powered by {quiz.model}
+              </p>
+            </div>
 
             {quizSubmitted && (
-              <div
-                style={{
-                  marginTop: "20px",
-                  padding: "16px",
-                  border: "1px solid #4caf50",
-                  borderRadius: "8px",
-                }}
-              >
-                <h3>Quiz Result</h3>
-
+              <div className="tl-success">
+                <strong>Quiz Result</strong>
                 <p>
-                  Your score:{" "}
-                  <strong>
-                    {quizScore} / {quiz.questions.length}
-                  </strong>
-                </p>
-
-                <p>
-                  Percentage:{" "}
-                  <strong>
-                    {Math.round(
-                      (quizScore / quiz.questions.length) * 100
-                    )}%
-                  </strong>
+                  Your score: <strong>{quizScore} / {quiz.questions.length}</strong>
+                  {" "}({Math.round((quizScore / quiz.questions.length) * 100)}%)
                 </p>
               </div>
             )}
 
             {quiz.questions.map((item, index) => {
-              const isCorrect =
-                selectedAnswers[index] === item.correct_answer;
+              const isCorrect = selectedAnswers[index] === item.correct_answer;
 
               return (
-                <article
-                  key={index}
-                  style={{
-                    marginTop: "20px",
-                    padding: "16px",
-                    border: "1px solid #ddd",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <h4>
-                    Question {index + 1}: {item.question}
-                  </h4>
-
-                  <p style={{ fontSize: "13px", color: "#777" }}>
-                    {item.type === "academic"
-                      ? "Academic"
-                      : "Job Assessment"}
+                <article key={index} className="tl-q">
+                  <h4>Question {index + 1}: {item.question}</h4>
+                  <p className="tl-note" style={{ margin: "0 0 4px" }}>
+                    {item.type === "academic" ? "Academic" : "Job Assessment"}
                     {item.page ? ` | PDF Page ${item.page}` : ""}
                   </p>
 
-                  {item.options.map((option, optionIndex) => (
-                    <label
-                      key={optionIndex}
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "10px",
-                        padding: "10px",
-                        marginTop: "8px",
-                        border: "1px solid #ddd",
-                        borderRadius: "6px",
-                        cursor: quizSubmitted ? "default" : "pointer",
-                        backgroundColor:
-                          quizSubmitted && option === item.correct_answer
-                            ? "#e8f5e9"
-                            : quizSubmitted &&
-                                selectedAnswers[index] === option &&
-                                !isCorrect
-                              ? "#ffebee"
-                              : "transparent",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name={`question-${index}`}
-                        value={option}
-                        checked={selectedAnswers[index] === option}
-                        disabled={quizSubmitted}
-                        onChange={() => {
-                          setSelectedAnswers((previous) => ({
-                            ...previous,
-                            [index]: option,
-                          }));
-                          setQuizError("");
-                        }}
-                      />
+                  {item.options.map((option, optionIndex) => {
+                    let state = "";
+                    if (quizSubmitted && option === item.correct_answer) state = " right";
+                    else if (quizSubmitted && selectedAnswers[index] === option && !isCorrect) state = " wrong";
 
-                      <span>{option}</span>
-                    </label>
-                  ))}
+                    return (
+                      <label key={optionIndex} className={`tl-opt${state}`}>
+                        <input
+                          type="radio"
+                          name={`question-${index}`}
+                          value={option}
+                          checked={selectedAnswers[index] === option}
+                          disabled={quizSubmitted}
+                          onChange={() => {
+                            setSelectedAnswers((previous) => ({ ...previous, [index]: option }));
+                            setQuizError("");
+                          }}
+                        />
+                        <span>{option}</span>
+                      </label>
+                    );
+                  })}
 
                   {quizSubmitted && (
-                    <div style={{ marginTop: "14px" }}>
-                      <p
-                        style={{
-                          color: isCorrect ? "green" : "red",
-                          fontWeight: "bold",
-                        }}
-                      >
+                    <div>
+                      <p className={`tl-verdict ${isCorrect ? "ok" : "bad"}`}>
                         {isCorrect ? "Correct!" : "Incorrect"}
                       </p>
-
-                      <p>
-                        <strong>Correct answer:</strong>{" "}
-                        {item.correct_answer}
+                      <p style={{ margin: "4px 0", fontSize: 14 }}>
+                        <strong>Correct answer:</strong> {item.correct_answer}
                       </p>
-
-                      <p>
+                      <p style={{ margin: "4px 0", fontSize: 14 }}>
                         <strong>Explanation:</strong> {item.explanation}
                       </p>
                     </div>
@@ -637,120 +437,15 @@ export default function StatisticsAssistant() {
             })}
 
             {!quizSubmitted ? (
-              <button
-                type="button"
-                onClick={handleSubmitQuiz}
-                style={{
-                  marginTop: "20px",
-                  padding: "12px 24px",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                }}
-              >
-                Submit Quiz
-              </button>
+              <div>
+                <button type="button" className="tl-btn" onClick={handleSubmitQuiz}>
+                  Submit Quiz
+                </button>
+              </div>
             ) : (
-              <p style={{ marginTop: "20px", fontWeight: "bold" }}>
-                Quiz submitted. Generate a new quiz whenever you are ready.
-              </p>
+              <p className="tl-note">Quiz submitted. Generate a new quiz whenever you are ready.</p>
             )}
           </div>
-        )}
-      </section>
-
-      {/* ENVISTATS INDIA 2024 */}
-      <section style={{ marginTop: "36px" }}>
-        <h2>EnviStats India 2024 Assistant</h2>
-
-        <p>
-          Search the official environmental statistics report and retrieve
-          relevant information with source references.
-        </p>
-
-        <form onSubmit={handleSearch}>
-          <textarea
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            placeholder="Example: What are environmental accounts in India?"
-            rows={4}
-            maxLength={1000}
-            style={{
-              width: "100%",
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              resize: "vertical",
-              boxSizing: "border-box",
-            }}
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              marginTop: "12px",
-              padding: "10px 20px",
-              border: "none",
-              borderRadius: "6px",
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-          >
-            {loading ? "Searching..." : "Search Statistics"}
-          </button>
-        </form>
-
-        {error && (
-          <p style={{ color: "red", marginTop: "16px" }}>
-            {error}
-          </p>
-        )}
-
-        {searched && (
-          <section style={{ marginTop: "28px" }}>
-            <h3>Retrieved information</h3>
-
-            {passages.length === 0 ? (
-              <p>No relevant passages were found.</p>
-            ) : (
-              passages.map((passage, index) => (
-                <article
-                  key={index}
-                  style={{
-                    padding: "16px",
-                    marginBottom: "16px",
-                    border: "1px solid #ddd",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <h4>Source passage {index + 1}</h4>
-
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: "#666",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    <strong>Source:</strong>{" "}
-                    {passage.source || "EnviStats India 2024"}
-                    {" | "}
-                    <strong>Page:</strong>{" "}
-                    {passage.page ?? "Not available"}
-                  </p>
-
-                  <p
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {passage.content}
-                  </p>
-                </article>
-              ))
-            )}
-          </section>
         )}
       </section>
     </div>

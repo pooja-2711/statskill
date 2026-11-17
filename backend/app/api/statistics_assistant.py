@@ -1,4 +1,4 @@
-
+﻿import os
 from pathlib import Path
 
 import chromadb
@@ -8,17 +8,21 @@ from sentence_transformers import SentenceTransformer
 
 from app.core.dependencies import get_current_user
 
-
 router = APIRouter(
     prefix="/statistics-assistant",
     tags=["Statistics Assistant"],
 )
 
-# Use the current backend folder, not the teammate's computer.
 BASE_DIR = Path(__file__).resolve().parents[2]
-
+_configured_path = Path(
+    os.getenv(
+        "ENVI_STATS_DATABASE_PATH",
+        str(BASE_DIR / "data" / "envi_stats_chroma_db"),
+    )
+)
 DATABASE_PATH = (
-    BASE_DIR / "data" / "envi_stats_chroma_db"
+    _configured_path if _configured_path.is_absolute()
+    else BASE_DIR / _configured_path
 )
 
 COLLECTION_NAME = "official_statistics"
@@ -43,20 +47,12 @@ def get_statistics_resources():
         )
 
     if _embedding_model is None:
-        _embedding_model = SentenceTransformer(
-            EMBEDDING_MODEL_NAME
-        )
+        _embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
     if _collection is None:
         try:
-            client = chromadb.PersistentClient(
-                path=str(DATABASE_PATH)
-            )
-
-            _collection = client.get_collection(
-                COLLECTION_NAME
-            )
-
+            client = chromadb.PersistentClient(path=str(DATABASE_PATH))
+            _collection = client.get_collection(COLLECTION_NAME)
         except Exception as exc:
             raise HTTPException(
                 status_code=503,
@@ -73,6 +69,14 @@ def search_statistics(
 ):
     try:
         model, collection = get_statistics_resources()
+        count = collection.count()
+
+        if count == 0:
+            return {
+                "question": request.question,
+                "results": [],
+                "count": 0,
+            }
 
         question_embedding = model.encode(
             request.question,
@@ -81,12 +85,8 @@ def search_statistics(
 
         results = collection.query(
             query_embeddings=[question_embedding],
-            n_results=min(request.limit, collection.count()),
-            include=[
-                "documents",
-                "distances",
-                "metadatas",
-            ],
+            n_results=min(request.limit, count),
+            include=["documents", "distances", "metadatas"],
         )
 
         documents = results.get("documents", [[]])[0]
@@ -94,21 +94,15 @@ def search_statistics(
         metadatas = results.get("metadatas", [[]])[0]
 
         passages = []
-
         for index, document in enumerate(documents):
             metadata = (
                 metadatas[index]
                 if index < len(metadatas) and metadatas[index]
                 else {}
             )
-
             passages.append({
                 "content": document,
-                "distance": (
-                    distances[index]
-                    if index < len(distances)
-                    else None
-                ),
+                "distance": distances[index] if index < len(distances) else None,
                 "page": metadata.get("page"),
                 "source": metadata.get("source"),
                 "filename": metadata.get("filename"),
@@ -122,7 +116,6 @@ def search_statistics(
 
     except HTTPException:
         raise
-
     except Exception as exc:
         print(f"EnviStats search error: {exc}")
         raise HTTPException(

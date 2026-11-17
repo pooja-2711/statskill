@@ -1,4 +1,4 @@
-﻿
+
 import axios from "axios";
 
 const api = axios.create({
@@ -58,7 +58,6 @@ export interface AIChatResponse {
 // AI TUTOR API FUNCTIONS
 // =========================
 
-// Create a new conversation.
 export const createAIConversation = async (
   title = "New conversation"
 ): Promise<AIConversation> => {
@@ -69,16 +68,11 @@ export const createAIConversation = async (
   return response.data;
 };
 
-// Get all conversations belonging to the logged-in user.
-export const getAIConversations = async (): Promise<
-  AIConversation[]
-> => {
+export const getAIConversations = async (): Promise<AIConversation[]> => {
   const response = await api.get("/ai-tutor/conversations");
-
   return response.data;
 };
 
-// Retrieve one conversation with its complete message history.
 export const getAIConversation = async (
   conversationId: number
 ): Promise<AIConversationDetail> => {
@@ -88,21 +82,28 @@ export const getAIConversation = async (
 
   return response.data;
 };
-
-// Send a message inside an existing conversation.
+export type TutorOptions = {
+  model?: string;
+  subject?: string;
+  difficulty?: string;
+  mode?: string;
+};
 export const sendAIConversationMessage = async (
   conversationId: number,
-  message: string
+  message: string,
+  options: TutorOptions = {}
 ): Promise<AIChatResponse> => {
   const response = await api.post(
     `/ai-tutor/conversations/${conversationId}/messages`,
-    { message }
+    {
+      message,
+      ...options,
+    }
   );
 
   return response.data;
 };
 
-// Delete a conversation and its associated messages.
 export const deleteAIConversation = async (
   conversationId: number
 ): Promise<{
@@ -116,7 +117,6 @@ export const deleteAIConversation = async (
   return response.data;
 };
 
-// Keep the original non-persistent chat function available.
 export const chatWithAITutor = async (
   message: string,
   _history: TutorHistoryMessage[] = []
@@ -128,16 +128,15 @@ export const chatWithAITutor = async (
   return response.data;
 };
 
+// =========================
 // STATISTICS ASSISTANT TYPES
 // =========================
 
 export interface StatisticsPassage {
   content: string;
   distance: number | null;
-  page?: number | null;
-  source?: string | null;
-  filename?: string | null;
 }
+
 export interface StatisticsSearchResponse {
   question: string;
   results: StatisticsPassage[];
@@ -260,6 +259,5 @@ export const generatePDFQuiz = async (
   return response.data;
 };
 
-
+// Export the configured Axios instance.
 export default api;
-

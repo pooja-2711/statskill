@@ -53,6 +53,22 @@ def get_courses(
 
     return courses
 
+@router.get("/my-courses", response_model=list[CourseResponse])
+def get_my_courses(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return all courses owned by the authenticated instructor."""
+
+    statement = (
+        select(Course)
+        .where(Course.instructor_id == current_user.id)
+        .order_by(Course.id)
+    )
+
+    courses = db.scalars(statement).all()
+
+    return courses
 
 @router.get("/{course_id}", response_model=CourseResponse)
 def get_course(

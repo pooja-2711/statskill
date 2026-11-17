@@ -1,68 +1,83 @@
 ﻿
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { MotionConfig, motion } from "framer-motion";
+
+import Sidebar from "./sidebar";
+import Topbar from "./Topbar";
+import { ToastProvider, useToast } from "./Toast";
 import { useAuth } from "../context/AuthContext";
+import { useEventReminders } from "../hooks/useEventReminders";
 
-const links = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/courses", label: "Courses" },
-  { to: "/lessons", label: "Lessons" },
-  { to: "/quiz", label: "Quizzes" },
-  { to: "/learning-path", label: "Learning Path" },
-  { to: "/progress", label: "Progress" },
-  { to: "/ai-tutor", label: "AI Tutor" },
-  { to: "/statistics-assistant", label: "Statistics Assistant" },
-  { to: "/profile", label: "Profile" },
-];
+const COLLAPSE_KEY = "sk-sidebar-collapsed";
 
-export default function AppLayout() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+function AppContent() {
+  const location = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem(COLLAPSE_KEY);
+    return saved !== null ? saved === "1" : window.innerWidth < 1100;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+  }, [collapsed]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+
+    window.addEventListener("keydown", onKey);
+
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
+
+  // Check calendar reminders only while a user is logged in.
+  useEventReminders(Boolean(user), (message) => toast(message, "info"));
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="sidebar-brand">Statskill</div>
+    <MotionConfig reducedMotion="user">
+      <div className="sk-shell">
+        <a href="#main-content" className="sk-skip">
+        </a>
 
-        <nav className="sidebar-nav">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                `side-link ${isActive ? "active" : ""}`
-              }
+        <Sidebar
+          collapsed={collapsed}
+          mobileOpen={mobileOpen}
+          onToggle={() => setCollapsed((c) => !c)}
+          onCloseMobile={() => setMobileOpen(false)}
+        />
+
+        <div className="sk-main">
+          <Topbar onOpenMenu={() => setMobileOpen(true)} />
+
+          <main id="main-content" tabIndex={-1} className="sk-content">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: "easeOut" }}
             >
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <button className="side-logout" onClick={handleLogout}>
-          Logout
-        </button>
-      </aside>
-
-      <div className="app-main">
-        <header className="topbar">
-          <span>
-            Welcome back, <strong>{user?.full_name}</strong>
-          </span>
-
-          <div className="avatar">
-            {user?.full_name?.charAt(0).toUpperCase()}
-          </div>
-        </header>
-
-        <main className="app-content">
-          <Outlet />
-        </main>
+              <Outlet />
+            </motion.div>
+          </main>
+        </div>
       </div>
-    </div>
+    </MotionConfig>
   );
 }
 
+export default function AppLayout() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
+  );
+}

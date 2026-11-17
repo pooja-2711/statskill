@@ -1,5 +1,4 @@
-﻿
-from app.models.user import User
+﻿from app.models.user import User
 from app.models.course import Course
 from app.models.lesson import Lesson
 from app.models.lesson_resource import LessonResource
@@ -16,6 +15,11 @@ from app.models.learning_path_enrollment import LearningPathEnrollment
 from app.models.ai_conversation import AIConversation
 from app.models.ai_message import AIMessage
 from app.models.pdf_document import PDFDocument
+from app.models.study_task import StudyTask
+from app.models.bookmark import Bookmark
+from app.models.calendar_event import CalendarEvent
+from app.models.course_discovery import ExternalCourse, UserGoal, CourseQuiz
+from app.models.content import ContentSource, ContentItem
 
 __all__ = [
     "User",
@@ -35,6 +39,12 @@ __all__ = [
     "AIConversation",
     "AIMessage",
     "PDFDocument",
+    "StudyTask",
+    "Bookmark",
+    "CalendarEvent",
+    "ExternalCourse",
+    "UserGoal",
+    "CourseQuiz",
+    "ContentSource",
+    "ContentItem",
 ]
-
-

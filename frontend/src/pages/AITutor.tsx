@@ -1,4 +1,4 @@
-import rehypeHighlight from "rehype-highlight";
+﻿import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import {
   isValidElement,
@@ -13,6 +13,7 @@ import {
 } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Check, Copy, Plus, Send, Sparkles, Trash2 } from "lucide-react";
 
 import {
   createAIConversation,
@@ -23,6 +24,7 @@ import {
   type AIConversation,
   type AIMessage,
 } from "../services/api";
+import "../tools.css";
 
 interface ChatMessage {
   id?: number;
@@ -31,23 +33,17 @@ interface ChatMessage {
 }
 
 const suggestions = [
+  "Explain the Union Budget in simple words",
+  "What is the difference between mean and median?",
+  "Summarize key government schemes for UPSC",
   "Explain Python functions with examples",
-  "What is object-oriented programming?",
-  "Explain SQL joins simply",
-  "Help me understand data structures",
 ];
 
 const models = ["qwen2.5:3b"];
+const subjects = ["General", "Statistics", "Current Affairs", "Government Exams", "Programming"];
+const difficulties = ["Beginner", "Intermediate", "Advanced"];
+const modes = ["Explain", "Step by step", "Quiz me", "Summarize"];
 
-const welcomeMessage: ChatMessage = {
-  role: "assistant",
-  content:
-    "Hello! I'm your Statskill AI Tutor. 👋\n\nI'm here to help you understand programming, computer science, and technical concepts. Ask me anything, and I'll explain it step by step!",
-};
-
-/* ---------- helpers ---------- */
-
-// Turns an API message into the shape the UI uses.
 function toChatMessage(message: AIMessage): ChatMessage {
   return {
     id: message.id,
@@ -56,14 +52,10 @@ function toChatMessage(message: AIMessage): ChatMessage {
   };
 }
 
-// Pulls the plain text out of rendered markdown children (for the copy button).
+// Pulls plain text out of rendered markdown children (for the copy button).
 function getNodeText(node: ReactNode): string {
-  if (typeof node === "string" || typeof node === "number") {
-    return String(node);
-  }
-  if (Array.isArray(node)) {
-    return node.map(getNodeText).join("");
-  }
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(getNodeText).join("");
   if (isValidElement(node)) {
     const element = node as ReactElement<{ children?: ReactNode }>;
     return getNodeText(element.props.children);
@@ -71,100 +63,93 @@ function getNodeText(node: ReactNode): string {
   return "";
 }
 
-// ASSUMPTION: the backend reply can come back in a few different shapes.
-// Adjust this if your sendAIConversationMessage returns something else.
-function extractReply(result: unknown): string {
-  const r = result as {
-    assistant_message?: { content?: string };
-    message?: { content?: string };
-    reply?: string;
-    response?: string;
-    content?: string;
-  } | null;
-
-  return (
-    r?.assistant_message?.content ??
-    r?.message?.content ??
-    r?.reply ??
-    r?.response ??
-    r?.content ??
-    ""
-  );
-}
-
 function getErrorMessage(err: unknown, fallback: string): string {
-  const detail = (
-    err as { response?: { data?: { detail?: unknown } } }
-  )?.response?.data?.detail;
-
+  const detail = (err as { response?: { data?: { detail?: unknown } } })
+    ?.response?.data?.detail;
   return typeof detail === "string" ? detail : fallback;
 }
 
-/* ---------- component ---------- */
+function Picker({
+  label,
+  value,
+  options,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div>
+      <label className="tl-label">{label}</label>
+      <select
+        className="tl-select"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+      >
+        {options.map((name) => (
+          <option key={name} value={name}>
+            {name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 function AITutor() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    welcomeMessage,
-  ]);
-
-  const [conversations, setConversations] = useState<
-    AIConversation[]
-  >([]);
-
-  const [activeConversationId, setActiveConversationId] =
-    useState<number | null>(null);
+  // An empty list means a fresh chat; the welcome screen is shown instead.
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [conversations, setConversations] = useState<AIConversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState("");
-  const [model, setModel] = useState("qwen2.5:3b");
-  const [copiedCode, setCopiedCode] = useState<string | null>(
-    null
-  );
-  const [deletingConversationId, setDeletingConversationId] =
-    useState<number | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [deletingConversationId, setDeletingConversationId] = useState<number | null>(null);
+
+  const [model, setModel] = useState(models[0]);
+  const [subject, setSubject] = useState(subjects[0]);
+  const [difficulty, setDifficulty] = useState(difficulties[0]);
+  const [mode, setMode] = useState(modes[0]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Keep the newest message in view.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // Grow the textarea as the user types.
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-
     textarea.style.height = "auto";
     textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
   }, [input]);
 
   const loadConversations = useCallback(async () => {
     try {
-      const data = await getAIConversations();
-      setConversations(data);
+      setConversations(await getAIConversations());
     } catch {
-      setError(
-        "Unable to load saved conversations. Please refresh the page."
-      );
+      setError("Unable to load saved conversations. Please refresh the page.");
     } finally {
       setHistoryLoading(false);
     }
   }, []);
 
-  // Load saved conversations when the page opens.
   useEffect(() => {
-    loadConversations();
+    void loadConversations();
   }, [loadConversations]);
 
   const startNewChat = () => {
     setActiveConversationId(null);
-    setMessages([welcomeMessage]);
+    setMessages([]);
     setInput("");
     setError("");
   };
@@ -174,21 +159,11 @@ function AITutor() {
 
     try {
       setError("");
-
-      // ASSUMPTION: getAIConversation returns the conversation with a
-      // `messages` array inside it.
-      const conversation = (await getAIConversation(
-        conversationId
-      )) as { messages?: AIMessage[] };
-
-      const loaded = (conversation.messages ?? []).map(toChatMessage);
-
+      const conversation = await getAIConversation(conversationId);
       setActiveConversationId(conversationId);
-      setMessages(loaded.length > 0 ? loaded : [welcomeMessage]);
+      setMessages((conversation.messages ?? []).map(toChatMessage));
     } catch (err) {
-      setError(
-        getErrorMessage(err, "Unable to open this conversation.")
-      );
+      setError(getErrorMessage(err, "Unable to open this conversation."));
     }
   };
 
@@ -198,18 +173,10 @@ function AITutor() {
     try {
       setDeletingConversationId(conversationId);
       await deleteAIConversation(conversationId);
-
-      setConversations((current) =>
-        current.filter((c) => c.id !== conversationId)
-      );
-
-      if (conversationId === activeConversationId) {
-        startNewChat();
-      }
+      setConversations((current) => current.filter((c) => c.id !== conversationId));
+      if (conversationId === activeConversationId) startNewChat();
     } catch (err) {
-      setError(
-        getErrorMessage(err, "Unable to delete this conversation.")
-      );
+      setError(getErrorMessage(err, "Unable to delete this conversation."));
     } finally {
       setDeletingConversationId(null);
     }
@@ -222,52 +189,38 @@ function AITutor() {
     setError("");
     setInput("");
     setLoading(true);
-
-    // Show the user's message right away. If this is the first message,
-    // drop the welcome text so it isn't saved as part of the chat.
-    setMessages((current) => [
-      ...current.filter((m) => m !== welcomeMessage),
-      { role: "user", content },
-    ]);
+    setMessages((current) => [...current, { role: "user", content }]);
 
     try {
       let conversationId = activeConversationId;
 
-      // First message of a new chat: create the conversation.
-      // ASSUMPTION: createAIConversation(title) returns the new conversation.
       if (conversationId === null) {
-        const created = await createAIConversation(
-          content.slice(0, 50)
-        );
+        const created = await createAIConversation(content.slice(0, 50));
         conversationId = created.id;
         setActiveConversationId(created.id);
         setConversations((current) => [created, ...current]);
       }
 
-      // ASSUMPTION: sendAIConversationMessage(conversationId, content, model).
-      // If your function takes an object instead, change this one call.
-      const result = await sendAIConversationMessage(
-        conversationId,
-        content,
-      );
-
-      const reply = extractReply(result);
+      const result = await sendAIConversationMessage(conversationId, content, {
+        model,
+        subject,
+        difficulty,
+        mode,
+      });
 
       setMessages((current) => [
         ...current,
         {
+          id: result.assistant_message?.id,
           role: "assistant",
           content:
-            reply || "Sorry, I didn't get a response. Please try again.",
+            result.reply ||
+            result.assistant_message?.content ||
+            "Sorry, I didn't get a response. Please try again.",
         },
       ]);
     } catch (err) {
-      setError(
-        getErrorMessage(
-          err,
-          "The AI tutor could not respond. Please try again."
-        )
-      );
+      setError(getErrorMessage(err, "The AI tutor could not respond. Please try again."));
     } finally {
       setLoading(false);
       textareaRef.current?.focus();
@@ -276,14 +229,14 @@ function AITutor() {
 
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
-    sendMessage(input);
+    void sendMessage(input);
   };
 
   // Enter sends, Shift+Enter adds a new line.
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      sendMessage(input);
+      void sendMessage(input);
     }
   };
 
@@ -298,53 +251,43 @@ function AITutor() {
   };
 
   return (
-    <div className="ai-tutor-page">
-      {/* ---------- sidebar: saved conversations ---------- */}
-      <aside className="ai-tutor-sidebar">
-        <button
-          type="button"
-          className="new-chat-button"
-          onClick={startNewChat}
-          disabled={loading}
-        >
-          + New chat
+    <div className="tl-page tl-tutor">
+      {/* ---------- saved conversations ---------- */}
+      <aside className="tl-card tl-history">
+        <button type="button" className="tl-btn" onClick={startNewChat} disabled={loading}>
+          <Plus size={16} /> New chat
         </button>
 
         <h3>History</h3>
 
         {historyLoading ? (
-          <p className="history-empty">Loading...</p>
+          <p className="tl-note">Loading...</p>
         ) : conversations.length === 0 ? (
-          <p className="history-empty">No conversations yet.</p>
+          <p className="tl-note">No conversations yet.</p>
         ) : (
-          <ul className="conversation-list">
+          <ul className="tl-convos">
             {conversations.map((conversation) => (
               <li
                 key={conversation.id}
                 className={
-                  conversation.id === activeConversationId
-                    ? "conversation-item active"
-                    : "conversation-item"
+                  conversation.id === activeConversationId ? "tl-convo active" : "tl-convo"
                 }
               >
                 <button
                   type="button"
-                  className="conversation-title"
-                  onClick={() => openConversation(conversation.id)}
+                  className="tl-convo-title"
+                  onClick={() => void openConversation(conversation.id)}
                 >
                   {conversation.title || "New conversation"}
                 </button>
-
                 <button
                   type="button"
-                  className="conversation-delete"
+                  className="tl-convo-del"
                   aria-label="Delete conversation"
-                  onClick={() => removeConversation(conversation.id)}
+                  onClick={() => void removeConversation(conversation.id)}
                   disabled={deletingConversationId === conversation.id}
                 >
-                  {deletingConversationId === conversation.id
-                    ? "..."
-                    : "✕"}
+                  <Trash2 size={15} />
                 </button>
               </li>
             ))}
@@ -352,34 +295,51 @@ function AITutor() {
         )}
       </aside>
 
-      {/* ---------- main chat area ---------- */}
-      <section className="ai-tutor-chat">
-        <header className="ai-tutor-header">
+      {/* ---------- chat ---------- */}
+      <section className="tl-card tl-chat">
+        <header className="tl-chat-head">
           <div>
-            <h1>AI Tutor</h1>
-            <p>Ask questions and learn step by step.</p>
+            <h1 className="tl-h1">
+              <Sparkles size={24} className="tl-gold" /> AI Tutor
+            </h1>
+            <p className="tl-sub">Ask questions and learn step by step.</p>
           </div>
 
-          <select
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            disabled={loading}
-            aria-label="Model"
-          >
-            {models.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
+          <div className="tl-selects">
+            <Picker label="Subject" value={subject} options={subjects} onChange={setSubject} disabled={loading} />
+            <Picker label="Difficulty" value={difficulty} options={difficulties} onChange={setDifficulty} disabled={loading} />
+            <Picker label="Mode" value={mode} options={modes} onChange={setMode} disabled={loading} />
+            <Picker label="Model" value={model} options={models} onChange={setModel} disabled={loading} />
+          </div>
         </header>
 
-        <div className="chat-messages">
+        <div className="tl-messages" aria-live="polite">
+          {messages.length === 0 && (
+            <div className="tl-welcome">
+              <Sparkles size={34} />
+              <h2>Hello! I&apos;m your Statskill AI Tutor</h2>
+              <p className="tl-sub">
+                Ask me about statistics, current affairs, government exams or programming.
+                I&apos;ll explain it step by step.
+              </p>
+              <div className="tl-chips">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    className="tl-chip"
+                    onClick={() => void sendMessage(suggestion)}
+                    disabled={loading}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {messages.map((message, index) => (
-            <div
-              key={message.id ?? index}
-              className={`chat-message ${message.role}`}
-            >
+            <div key={`${message.id ?? "new"}-${index}`} className={`tl-msg ${message.role}`}>
               {message.role === "assistant" ? (
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
@@ -387,15 +347,14 @@ function AITutor() {
                   components={{
                     pre({ children }) {
                       const code = getNodeText(children);
-
                       return (
-                        <div className="code-block">
-                          <button
-                            type="button"
-                            className="copy-button"
-                            onClick={() => copyCode(code)}
-                          >
-                            {copiedCode === code ? "Copied!" : "Copy"}
+                        <div className="tl-code">
+                          <button type="button" className="tl-copy" onClick={() => void copyCode(code)}>
+                            {copiedCode === code ? (
+                              <><Check size={13} /> Copied</>
+                            ) : (
+                              <><Copy size={13} /> Copy</>
+                            )}
                           </button>
                           <pre>{children}</pre>
                         </div>
@@ -406,40 +365,18 @@ function AITutor() {
                   {message.content}
                 </ReactMarkdown>
               ) : (
-                <p>{message.content}</p>
+                message.content
               )}
             </div>
           ))}
 
-          {/* Suggestions show only on a fresh chat. */}
-          {messages.length === 1 && messages[0] === welcomeMessage && (
-            <div className="suggestions">
-              {suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  className="suggestion-chip"
-                  onClick={() => sendMessage(suggestion)}
-                  disabled={loading}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {loading && (
-            <div className="chat-message assistant typing">
-              Thinking...
-            </div>
-          )}
-
+          {loading && <div className="tl-msg assistant tl-thinking">Thinking...</div>}
           <div ref={bottomRef} />
         </div>
 
-        {error && <p className="chat-error">{error}</p>}
+        {error && <p className="tl-error" role="alert">{error}</p>}
 
-        <form className="chat-input" onSubmit={handleSubmit}>
+        <form className="tl-composer" onSubmit={handleSubmit}>
           <textarea
             ref={textareaRef}
             value={input}
@@ -449,9 +386,8 @@ function AITutor() {
             rows={1}
             disabled={loading}
           />
-
-          <button type="submit" disabled={loading || !input.trim()}>
-            {loading ? "..." : "Send"}
+          <button className="tl-send" type="submit" disabled={loading || !input.trim()} aria-label="Send">
+            <Send size={18} />
           </button>
         </form>
       </section>
