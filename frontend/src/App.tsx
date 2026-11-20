@@ -1,4 +1,4 @@
-﻿
+
 import { lazy, Suspense } from "react";
 import { Link, Outlet, Route, Routes, useLocation } from "react-router-dom";
 
@@ -22,7 +22,6 @@ const Quiz = lazy(() => import("./pages/quiz"));
 const LearningPath = lazy(() => import("./pages/LearningPath"));
 const AITutor = lazy(() => import("./pages/AITutor"));
 const StatisticsAssistant = lazy(() => import("./pages/StatisticsAssistant"));
-const EnviStats = lazy(() => import("./pages/EnviStats"));
 
 const CurrentAffairsPage = lazy(() =>
   import("./pages/modulePages").then((m) => ({
@@ -135,7 +134,6 @@ function App() {
                 path="/statistics-assistant"
                 element={<StatisticsAssistant />}
               />
-              <Route path="/envistats" element={<EnviStats />} />
               <Route path="/lessons" element={<Lessons />} />
               <Route path="/quiz" element={<Quiz />} />
 

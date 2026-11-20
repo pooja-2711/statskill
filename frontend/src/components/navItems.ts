@@ -1,4 +1,4 @@
-﻿
+
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -11,7 +11,6 @@ import {
   GraduationCap,
   Landmark,
   LayoutDashboard,
-  Leaf,
   Newspaper,
   Route,
   ScrollText,
@@ -40,7 +39,6 @@ export const navGroups: NavGroup[] = [
       { to: "/newspapers", label: "Newspapers", icon: Newspaper, keywords: ["times of india", "the hindu", "editorial"] },
       { to: "/ai-tutor", label: "AI Tutor", icon: Sparkles, keywords: ["chat", "ask", "explain", "assistant"] },
       { to: "/statistics-assistant", label: "PDF Learning Assistant", icon: FileText, keywords: ["pdf", "upload", "notes", "document"] },
-      { to: "/envistats", label: "EnviStats", icon: Leaf, keywords: ["environment", "statistics", "india", "envistats"] },
       { to: "/schemes", label: "Government Schemes", icon: Landmark, keywords: ["policy", "yojana", "ministry", "scheme"] },
       { to: "/exams", label: "Government Exams", icon: GraduationCap, keywords: ["upsc", "ssc", "banking", "railway", "defence", "psc"] },
     ],
