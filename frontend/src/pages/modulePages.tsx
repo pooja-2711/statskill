@@ -1009,6 +1009,7 @@ function formatDate(value: string | null): string {
   }).format(date);
 }
 
+
 function ContentPage({
   title,
   description,
@@ -1055,7 +1056,7 @@ function ContentPage({
           )
         );
       } catch {
-        // The article list can still load if source metadata fails.
+        // Articles can still load if source metadata is unavailable.
       }
     }
 
@@ -1099,6 +1100,7 @@ function ContentPage({
         setItems([]);
         setTotal(0);
         setTotalPages(0);
+
         setError(
           err instanceof Error
             ? err.message
@@ -1114,7 +1116,15 @@ function ContentPage({
     return () => {
       cancelled = true;
     };
-  }, [endpoint, page, category, source, dateFrom, dateTo, showSourceFilter]);
+  }, [
+    endpoint,
+    page,
+    category,
+    source,
+    dateFrom,
+    dateTo,
+    showSourceFilter,
+  ]);
 
   function clearFilters() {
     setCategory("");
@@ -1124,43 +1134,74 @@ function ContentPage({
     setPage(1);
   }
 
+  const hasActiveFilters =
+    Boolean(category) ||
+    Boolean(source) ||
+    Boolean(dateFrom) ||
+    Boolean(dateTo);
+
   return (
-    <div className="tl-page">
-      <section className="tl-card">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 8,
-          }}
-        >
-          <Icon size={28} className="tl-gold" />
-          <h1 className="tl-h1">{title}</h1>
+    <main className="tl-page">
+      <section className="ca-hero">
+        <div className="ca-hero-top">
+          <div className="ca-icon">
+            <Icon size={27} />
+          </div>
+
+          <span className="ca-live">
+            <span className="ca-live-dot" />
+            EXAM PREPARATION
+          </span>
         </div>
 
-        <p className="tl-sub">{description}</p>
+        <p className="ca-eyebrow">YOUR DAILY KNOWLEDGE UPDATE</p>
 
-        <p className="tl-note" style={{ marginTop: 12 }}>
-          {total.toLocaleString("en-IN")} articles available
-        </p>
+        <h1 className="ca-title">{title}</h1>
+
+        <p className="ca-description">{description}</p>
+
+        <div className="ca-stats">
+          <div className="ca-stat">
+            <span className="ca-stat-number">
+              {total.toLocaleString("en-IN")}
+            </span>
+            <span className="ca-stat-label">Articles available</span>
+          </div>
+
+          <div className="ca-stat-divider" />
+
+          <div className="ca-stat">
+            <span className="ca-stat-number">
+              {categories.length}
+            </span>
+            <span className="ca-stat-label">News categories</span>
+          </div>
+        </div>
       </section>
 
-      <section className="tl-card">
-        <h2 className="tl-h2">Filter articles</h2>
+      <section className="ca-filter-card">
+        <div className="ca-section-heading">
+          <div>
+            <p className="ca-eyebrow">PERSONALISED READING</p>
+            <h2>Explore articles</h2>
+            <p>Find news based on your interests and preparation needs.</p>
+          </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 12,
-            marginTop: 14,
-          }}
-        >
-          <label>
-            <span className="tl-label">Category</span>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="ca-clear"
+              onClick={clearFilters}
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+
+        <div className="ca-filters">
+          <label className="ca-control">
+            <span>Category</span>
             <select
-              className="tl-select"
               value={category}
               onChange={(event) => {
                 setCategory(event.target.value);
@@ -1177,10 +1218,9 @@ function ContentPage({
           </label>
 
           {showSourceFilter && (
-            <label>
-              <span className="tl-label">Newspaper</span>
+            <label className="ca-control">
+              <span>Newspaper</span>
               <select
-                className="tl-select"
                 value={source}
                 onChange={(event) => {
                   setSource(event.target.value);
@@ -1197,10 +1237,9 @@ function ContentPage({
             </label>
           )}
 
-          <label>
-            <span className="tl-label">From date</span>
+          <label className="ca-control">
+            <span>From date</span>
             <input
-              className="tl-field"
               type="date"
               value={dateFrom}
               max={dateTo || undefined}
@@ -1211,10 +1250,9 @@ function ContentPage({
             />
           </label>
 
-          <label>
-            <span className="tl-label">To date</span>
+          <label className="ca-control">
+            <span>To date</span>
             <input
-              className="tl-field"
               type="date"
               value={dateTo}
               min={dateFrom || undefined}
@@ -1226,166 +1264,148 @@ function ContentPage({
           </label>
         </div>
 
-        <button
-          type="button"
-          className="tl-btn ghost"
-          onClick={clearFilters}
-          style={{ marginTop: 14 }}
-        >
-          Clear filters
-        </button>
+        {hasActiveFilters && (
+          <p className="ca-filter-status">
+            Filters applied. Showing matching articles.
+          </p>
+        )}
       </section>
 
-      {error && (
-        <div className="tl-error" role="alert">
-          {error}
-          <button
-            type="button"
-            onClick={() => setPage((current) => current)}
-            style={{
-              marginLeft: 12,
-              border: 0,
-              background: "transparent",
-              color: "inherit",
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
-          >
-            Retry
-          </button>
+      <section className="ca-articles-section">
+        <div className="ca-articles-heading">
+          <div>
+            <p className="ca-eyebrow">STAY INFORMED</p>
+            <h2>Latest articles</h2>
+          </div>
+
+          <span className="ca-count">
+            {total.toLocaleString("en-IN")} results
+          </span>
         </div>
-      )}
 
-      {loading ? (
-        <section className="tl-card" style={{ textAlign: "center" }}>
-          <RefreshCw
-            size={22}
-            className="tl-gold"
-            style={{ animation: "spin 1s linear infinite" }}
-          />
-          <p className="tl-sub">Loading articles...</p>
-        </section>
-      ) : (
-        <>
-          {items.length === 0 && !error ? (
-            <section className="tl-card">
-              <h2 className="tl-h2">No articles found</h2>
-              <p className="tl-sub">
-                There are no articles matching these filters.
-              </p>
-            </section>
-          ) : (
-            <div className="tl-stack">
-              {items.map((item) => (
-                <article className="tl-card" key={item.id}>
-                  <p
-                    className="tl-gold"
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 13,
-                      margin: "0 0 8px",
-                    }}
-                  >
+        {error && (
+          <div className="ca-error" role="alert">
+            <div>
+              <strong>Unable to load articles</strong>
+              <p>{error}</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setPage((current) => current)}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="ca-loading">
+            <RefreshCw className="ca-spinner" size={25} />
+            <h3>Loading your articles</h3>
+            <p>Please wait while we fetch the latest updates.</p>
+          </div>
+        ) : items.length === 0 && !error ? (
+          <div className="ca-empty">
+            <div className="ca-empty-icon">
+              <Newspaper size={28} />
+            </div>
+            <h3>No articles found</h3>
+            <p>
+              No articles match your selected filters. Try changing
+              the category or date range.
+            </p>
+            <button
+              type="button"
+              className="ca-primary-button"
+              onClick={clearFilters}
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <div className="ca-article-grid">
+            {items.map((item) => (
+              <article className="ca-article-card" key={item.id}>
+                <div className="ca-article-top">
+                  <span className="ca-source">
+                    <Newspaper size={14} />
                     {item.source_name}
+                  </span>
+
+                  <span className="ca-category">
+                    {item.category}
+                  </span>
+                </div>
+
+                <h3 className="ca-article-title">
+                  {item.title}
+                </h3>
+
+                <div className="ca-date">
+                  <span>{formatDate(item.published_at)}</span>
+                </div>
+
+                {item.summary && (
+                  <p className="ca-summary">
+                    {item.summary}
                   </p>
+                )}
 
-                  <h2
-                    style={{
-                      fontSize: 18,
-                      lineHeight: 1.45,
-                      margin: "0 0 12px",
-                    }}
-                  >
-                    {item.title}
-                  </h2>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 12,
-                      color: "var(--muted)",
-                      fontSize: 12.5,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <span>{item.category}</span>
-                    <span>{formatDate(item.published_at)}</span>
-                  </div>
-
-                  {item.summary && (
-                    <p
-                      style={{
-                        color: "var(--text)",
-                        fontSize: 14,
-                        lineHeight: 1.7,
-                        margin: "0 0 16px",
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {item.summary}
-                    </p>
-                  )}
+                <div className="ca-article-footer">
+                  <span className="ca-ai-label">
+                    <span />
+                    AI-SUMMARISED
+                  </span>
 
                   <a
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="tl-btn"
-                    style={{
-                      textDecoration: "none",
-                      width: "fit-content",
-                    }}
+                    className="ca-read-link"
                   >
-                    Read original article
+                    Read original
                     <ExternalLink size={15} />
                   </a>
-                </article>
-              ))}
-            </div>
-          )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
-          {totalPages > 1 && (
-            <section
-              className="tl-card"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-                flexWrap: "wrap",
-              }}
-            >
-              <button
-                type="button"
-                className="tl-btn ghost"
-                disabled={page <= 1}
-                onClick={() => setPage((current) => current - 1)}
-              >
-                <ChevronLeft size={16} />
-                Previous
-              </button>
+      {!loading && totalPages > 1 && (
+        <section className="ca-pagination">
+          <button
+            type="button"
+            className="ca-page-button"
+            disabled={page <= 1}
+            onClick={() => setPage((current) => current - 1)}
+          >
+            <ChevronLeft size={17} />
+            Previous
+          </button>
 
-              <span className="tl-note">
-                Page {page} of {totalPages}
-              </span>
+          <span>
+            Page <strong>{page}</strong> of{" "}
+            <strong>{totalPages}</strong>
+          </span>
 
-              <button
-                type="button"
-                className="tl-btn ghost"
-                disabled={page >= totalPages}
-                onClick={() => setPage((current) => current + 1)}
-              >
-                Next
-                <ChevronRight size={16} />
-              </button>
-            </section>
-          )}
-        </>
+          <button
+            type="button"
+            className="ca-page-button"
+            disabled={page >= totalPages}
+            onClick={() => setPage((current) => current + 1)}
+          >
+            Next
+            <ChevronRight size={17} />
+          </button>
+        </section>
       )}
-    </div>
+    </main>
   );
 }
+
 
 export const CurrentAffairsPage = () => (
   <ContentPage

@@ -1432,3 +1432,856 @@
   }
 }
 
+/* ---------- Login page contrast fixes ---------- */
+
+/* Keep navbar links readable */
+.navbar .nav-link {
+  color: #374151 !important;
+}
+
+.navbar .nav-link:hover {
+  color: var(--primary) !important;
+}
+
+/* Ensure login and registration cards use dark text */
+.card {
+  color: #111827 !important;
+  background: #ffffff !important;
+}
+
+.card h1 {
+  color: #111827 !important;
+}
+
+.card p {
+  color: #6b7280 !important;
+}
+
+.card a {
+  color: var(--primary) !important;
+}
+
+/* Make input fields readable */
+.card input {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.card input::placeholder {
+  color: #6b7280 !important;
+  opacity: 1;
+}
+
+.card input:focus {
+  border-color: var(--primary) !important;
+}
+
+/* Preserve readable error and success messages */
+.card .error {
+  color: #b91c1c !important;
+}
+
+.card .ok {
+  color: #15803d !important;
+}
+
+/* =========================================
+   CURRENT AFFAIRS AND NEWSPAPERS REDESIGN
+========================================= */
+
+.ca-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 34px;
+  margin-bottom: 22px;
+  border-radius: 22px;
+  color: #fff;
+  background: linear-gradient(120deg, #172554, #312e81 60%, #4338ca);
+  box-shadow: 0 12px 35px rgba(30, 41, 100, 0.16);
+}
+
+.ca-hero::after {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  right: -85px;
+  bottom: -145px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 50%;
+  box-shadow: 0 0 0 35px rgba(255,255,255,.035),
+              0 0 0 70px rgba(255,255,255,.025);
+  pointer-events: none;
+}
+
+.ca-hero-top,
+.ca-articles-heading,
+.ca-section-heading,
+.ca-article-top,
+.ca-article-footer,
+.ca-stats,
+.ca-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.ca-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  color: #fff;
+  background: rgba(255,255,255,.14);
+}
+
+.ca-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 30px;
+  color: #e0e7ff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.ca-live-dot,
+.ca-ai-label span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+.ca-eyebrow {
+  margin: 22px 0 8px;
+  color: #a5b4fc;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+.ca-title {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(30px, 4vw, 43px);
+  font-weight: 800;
+  letter-spacing: -1.3px;
+}
+
+.ca-description {
+  max-width: 650px;
+  margin: 12px 0 24px;
+  color: #dbeafe;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.ca-stats {
+  justify-content: flex-start;
+  width: fit-content;
+  gap: 25px;
+}
+
+.ca-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ca-stat-number {
+  color: #fff;
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.ca-stat-label {
+  color: #c7d2fe;
+  font-size: 11px;
+}
+
+.ca-stat-divider {
+  width: 1px;
+  height: 38px;
+  background: rgba(255,255,255,.22);
+}
+
+.ca-filter-card,
+.ca-article-card,
+.ca-loading,
+.ca-empty,
+.ca-pagination {
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 17px;
+  background: var(--surface, #fff);
+  box-shadow: 0 5px 20px rgba(15,23,42,.035);
+}
+
+.ca-filter-card {
+  padding: 23px;
+  margin-bottom: 30px;
+}
+
+.ca-section-heading {
+  align-items: flex-start;
+}
+
+.ca-section-heading .ca-eyebrow,
+.ca-articles-heading .ca-eyebrow {
+  margin: 0 0 7px;
+  color: #6366f1;
+}
+
+.ca-section-heading h2,
+.ca-articles-heading h2 {
+  margin: 0;
+  color: var(--text, #111827);
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.ca-section-heading p:not(.ca-eyebrow) {
+  margin: 7px 0 0;
+  color: var(--muted, #6b7280);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.ca-clear {
+  padding: 8px 13px;
+  border: 1px solid #c7d2fe;
+  border-radius: 9px;
+  color: #4338ca;
+  background: #eef2ff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ca-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 15px;
+  margin-top: 22px;
+}
+
+.ca-control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ca-control > span {
+  color: var(--text, #374151);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ca-control select,
+.ca-control input {
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 9px;
+  outline: none;
+  color: var(--text, #111827);
+  background: var(--surface, #fff);
+  font: inherit;
+  font-size: 12px;
+}
+
+.ca-control select:focus,
+.ca-control input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+}
+
+.ca-filter-status {
+  margin: 14px 0 0;
+  color: #4f46e5;
+  font-size: 11px;
+}
+
+.ca-articles-section {
+  margin-top: 28px;
+}
+
+.ca-articles-heading {
+  margin-bottom: 17px;
+}
+
+.ca-count {
+  padding: 7px 12px;
+  border-radius: 20px;
+  color: #4338ca;
+  background: #eef2ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ca-article-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.ca-article-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 21px;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.ca-article-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(15,23,42,.09);
+}
+
+.ca-article-top {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.ca-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #4f46e5;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.ca-category {
+  padding: 5px 10px;
+  border-radius: 20px;
+  color: #4338ca;
+  background: #eef2ff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.ca-article-title {
+  margin: 16px 0 9px;
+  color: var(--text, #111827);
+  font-size: 17px;
+  line-height: 1.5;
+  font-weight: 800;
+}
+
+.ca-date {
+  margin-bottom: 12px;
+  color: var(--muted, #6b7280);
+  font-size: 11px;
+}
+
+.ca-summary {
+  flex: 1;
+  margin: 0 0 19px;
+  color: var(--text, #374151);
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.ca-article-footer {
+  padding-top: 14px;
+  border-top: 1px solid var(--border, #e5e7eb);
+  flex-wrap: wrap;
+}
+
+.ca-ai-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #15803d;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .7px;
+}
+
+.ca-read-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #4f46e5;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.ca-read-link:hover {
+  color: #312e81;
+  text-decoration: underline;
+}
+
+.ca-loading,
+.ca-empty {
+  padding: 45px 20px;
+  text-align: center;
+}
+
+.ca-loading h3,
+.ca-empty h3 {
+  margin: 12px 0 6px;
+  color: var(--text, #111827);
+  font-size: 17px;
+}
+
+.ca-loading p,
+.ca-empty p {
+  max-width: 420px;
+  margin: 0 auto;
+  color: var(--muted, #6b7280);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.ca-spinner {
+  color: #4f46e5;
+  animation: ca-spin 1s linear infinite;
+}
+
+@keyframes ca-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ca-empty-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 55px;
+  height: 55px;
+  border-radius: 15px;
+  color: #4f46e5;
+  background: #eef2ff;
+}
+
+.ca-primary-button {
+  margin-top: 17px;
+  padding: 10px 17px;
+  border: 0;
+  border-radius: 9px;
+  color: white;
+  background: #4f46e5;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ca-pagination {
+  margin-top: 22px;
+  padding: 14px 17px;
+  color: var(--muted, #6b7280);
+  font-size: 12px;
+}
+
+.ca-pagination strong {
+  color: var(--text, #111827);
+}
+
+.ca-page-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 13px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 9px;
+  color: var(--text, #374151);
+  background: var(--surface, #fff);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ca-page-button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.ca-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 17px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.ca-error p {
+  margin: 5px 0 0;
+  font-size: 12px;
+}
+
+.ca-error button {
+  padding: 7px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+  background: white;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .ca-hero {
+    padding: 24px 19px;
+    border-radius: 16px;
+  }
+
+  .ca-title {
+    font-size: 30px;
+  }
+
+  .ca-filter-card {
+    padding: 17px;
+  }
+
+  .ca-article-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ca-section-heading {
+    flex-direction: column;
+  }
+
+  .ca-pagination {
+    flex-wrap: wrap;
+  }
+}
+
+/* =========================================
+   STATSKILL — BACKEND STATUS & LEARNING PATH
+   CONTRAST FIXES
+========================================= */
+
+/* 1. Backend health status badge */
+.status-pill {
+  color: #166534 !important;
+  background: #dcfce7 !important;
+  border: 1px solid #86efac !important;
+  font-weight: 700;
+}
+
+.status-pill .dot.ok {
+  background: #16a34a !important;
+}
+
+/* 2. Learning Path course cards */
+.learning-path-card {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+.learning-path-card h3 {
+  color: #111827 !important;
+  font-weight: 800;
+}
+
+.learning-path-card p {
+  color: #4b5563 !important;
+}
+
+/* 3. Learning Path card labels */
+.learning-level,
+.learning-enrolled {
+  color: #3730a3 !important;
+  background: #eef2ff !important;
+}
+
+.learning-completed {
+  color: #166534 !important;
+}
+
+.learning-in-progress {
+  color: #92400e !important;
+}
+
+/* 4. View Details and secondary buttons */
+.learning-path-card .btn-secondary,
+.learning-path-actions .btn-secondary {
+  color: #3730a3 !important;
+  background: #e0e7ff !important;
+  border: 1px solid #c7d2fe !important;
+  font-weight: 700;
+}
+
+.learning-path-card .btn-secondary:hover,
+.learning-path-actions .btn-secondary:hover {
+  color: #312e81 !important;
+  background: #c7d2fe !important;
+}
+
+/* 5. Enrolled course cards */
+.learning-enrollment {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+.learning-enrollment strong,
+.learning-enrollment h3 {
+  color: #111827 !important;
+}
+
+.learning-enrollment p {
+  color: #4b5563 !important;
+}
+
+/* 6. Learning Path detail headings and content */
+.learning-detail-heading h2,
+.learning-path-details h2 {
+  color: #111827 !important;
+}
+
+.learning-course-item {
+  color: #374151 !important;
+  background: #ffffff !important;
+}
+
+.learning-progress-box {
+  color: #1f2937 !important;
+}
+
+.learning-progress-box p,
+.learning-progress-stats {
+  color: #374151 !important;
+}
+
+/* 7. Responsive readability */
+@media (max-width: 600px) {
+  .learning-path-card,
+  .learning-enrollment {
+    color: #1f2937 !important;
+  }
+
+  .learning-path-actions .btn {
+    min-width: 120px;
+  }
+}
+
+/* ================================================
+   STATSKILL GLOBAL READABILITY FIX
+   Login, Progress, Quiz, Profile and Learning Pages
+================================================ */
+
+/* 1. LOGIN AND REGISTRATION INPUTS */
+.card input,
+.card input[type="email"],
+.card input[type="password"],
+.card input[type="text"] {
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.card input::placeholder {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  opacity: 1 !important;
+}
+
+/* 2. LEARNING PROGRESS CARDS */
+.progress-stat-card,
+.progress-course-card,
+.progress-empty {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+.progress-stat-card span {
+  color: #475569 !important;
+}
+
+.progress-stat-card strong,
+.progress-course-top > strong {
+  color: #7c3aed !important;
+}
+
+.progress-header h1,
+.progress-overview-heading h2,
+.progress-course-card h3,
+.progress-empty h3,
+.section-heading h2 {
+  color: #111827 !important;
+}
+
+.progress-overview-heading p,
+.progress-course-card p,
+.progress-empty p {
+  color: #475569 !important;
+}
+
+/* Progress section headings */
+.progress-overview,
+.course-progress-section {
+  color: #1f2937 !important;
+}
+
+/* 3. QUIZZES AND ASSESSMENTS */
+.quiz-selection,
+.quiz-history,
+.active-quiz,
+.quiz-result {
+  color: #1f2937 !important;
+}
+
+.quiz-selection h2,
+.quiz-selection h3,
+.quiz-history h2,
+.quiz-history h3,
+.quiz-card h3,
+.quiz-question h3,
+.quiz-result h3 {
+  color: #111827 !important;
+}
+
+.quiz-card {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+.quiz-card p,
+.quiz-question p,
+.quiz-history-item p {
+  color: #475569 !important;
+}
+
+.quiz-select {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.quiz-select option {
+  color: #111827 !important;
+  background: #ffffff !important;
+}
+
+.quiz-option {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+.quiz-option:hover,
+.quiz-option.selected {
+  background: #eef2ff !important;
+  color: #312e81 !important;
+}
+
+.quiz-meta,
+.quiz-progress-label {
+  color: #475569 !important;
+}
+
+.quiz-history-item {
+  color: #1f2937 !important;
+}
+
+.quiz-history-item strong,
+.quiz-history-score strong {
+  color: #111827 !important;
+}
+
+/* 4. MY PROFILE */
+.card .profile-row {
+  color: #1f2937 !important;
+}
+
+.card .profile-row span:first-child {
+  color: #64748b !important;
+}
+
+.card .profile-row span:last-child {
+  color: #111827 !important;
+}
+
+/* 5. LEARNING PATHS AND ENROLLMENTS */
+.learning-path-card,
+.learning-enrollment {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+.learning-path-card h3,
+.learning-enrollment strong,
+.learning-enrollment h3 {
+  color: #111827 !important;
+}
+
+.learning-path-card p,
+.learning-enrollment p {
+  color: #475569 !important;
+}
+
+/* 6. COMMON WHITE CARD TEXT */
+.progress-stat-card,
+.progress-course-card,
+.quiz-card,
+.learning-path-card,
+.learning-enrollment {
+  border-color: #e2e8f0 !important;
+}
+
+.progress-stat-card *,
+.progress-course-card *,
+.quiz-card *,
+.learning-path-card *,
+.learning-enrollment * {
+  text-shadow: none;
+}
+
+/* 7. ACCESSIBILITY: INPUT FOCUS */
+.card input:focus,
+.quiz-select:focus {
+  outline: none !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+}
+
+/* 8. MOBILE READABILITY */
+@media (max-width: 600px) {
+  .progress-stat-card,
+  .progress-course-card,
+  .quiz-card,
+  .learning-path-card,
+  .learning-enrollment {
+    color: #1f2937 !important;
+  }
+}
+
+/* =========================================
+   LEARNING PROGRESS — DARK BACKGROUND HEADINGS
+========================================= */
+
+/* Main page heading */
+.progress-header h1 {
+  color: #ffffff !important;
+}
+
+/* Course-wise progress heading */
+.course-progress-section > .section-heading h2,
+.course-progress-section .section-heading h2 {
+  color: #ffffff !important;
+}
+
+/* Course count beside the heading */
+.course-progress-section .section-heading > span {
+  color: #cbd5e1 !important;
+}
+
+/* Keep headings inside white cards dark */
+.progress-course-card h3,
+.progress-overview-heading h2 {
+  color: #111827 !important;
+}
+
+
