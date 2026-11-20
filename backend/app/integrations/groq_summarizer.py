@@ -88,7 +88,9 @@ def _chat(messages: list[dict]) -> str:
         "model": GROQ_MODEL,
         "messages": messages,
         "temperature": 0.1,
-        "max_tokens": 1500,
+        "max_completion_tokens": 4096,
+        "reasoning_effort": "low",
+        "include_reasoning": False,
         "response_format": {"type": "json_object"},
     }
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}

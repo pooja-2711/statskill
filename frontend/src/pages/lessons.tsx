@@ -1,5 +1,8 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import api from "../services/api";
 
 interface Lesson {
@@ -56,8 +59,6 @@ export default function Lessons() {
 
         if (active) {
           setLessons(sortedLessons);
-
-          // Automatically select the first lesson.
           setSelectedLesson(sortedLessons[0] ?? null);
         }
       } catch (err) {
@@ -164,8 +165,8 @@ export default function Lessons() {
 
                 <small>
                   {lesson.duration_minutes} min
-                  {lesson.is_preview ? " • Preview" : ""}
-                  {completed.includes(lesson.id) ? " • Completed" : ""}
+                  {lesson.is_preview ? " | Preview" : ""}
+                  {completed.includes(lesson.id) ? " | Completed" : ""}
                 </small>
               </button>
             ))}
@@ -194,8 +195,13 @@ export default function Lessons() {
                 )}
 
                 <div className="lesson-text">
-                  {selectedLesson.content ||
-                    "No lesson content available."}
+                  {selectedLesson.content ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {selectedLesson.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <p>No lesson content available.</p>
+                  )}
                 </div>
 
                 <p className="muted">

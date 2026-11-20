@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db.dependencies import get_db
 from app.core.dependencies import get_current_user
+from app.core.course_access import has_learning_path_enrollment
 
 from app.models.user import User
 from app.models.course import Course
@@ -53,17 +54,31 @@ def complete_lesson(
             detail="Course not found",
         )
 
-    # Only the instructor or a learner accessing a published course
-    # can mark a lesson as completed.
-    if (
-        course.instructor_id != current_user.id
-        and not course.is_published
-    ):
+    # Check whether the current user owns the course.
+    is_owner = course.instructor_id == current_user.id
+
+    # Check whether the learner is enrolled in a path containing this course.
+    is_enrolled = has_learning_path_enrollment(
+        db=db,
+        course_id=course.id,
+        user_id=current_user.id,
+    )
+
+    # Non-owners can access published courses only.
+    if not is_owner and not course.is_published:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This course is not available",
         )
 
+    # Non-enrolled learners can complete preview lessons only.
+    if not is_owner and not is_enrolled and not lesson.is_preview:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Enroll in the learning path to complete this lesson",
+        )
+
+    # Find existing progress for this user and lesson.
     progress = db.query(Progress).filter(
         Progress.user_id == current_user.id,
         Progress.lesson_id == lesson_id,
@@ -179,9 +194,11 @@ def get_overall_progress(
     # Count lessons in those courses.
     total_lessons = (
         db.query(func.count(Lesson.id))
-        .filter(Lesson.course_id.in_(
-            db.query(user_course_ids.c.course_id)
-        ))
+        .filter(
+            Lesson.course_id.in_(
+                db.query(user_course_ids.c.course_id)
+            )
+        )
         .scalar()
         or 0
     )

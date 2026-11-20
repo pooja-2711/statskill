@@ -1,13 +1,21 @@
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user
+from app.core.course_access import has_learning_path_enrollment
 from app.db.dependencies import get_db
+
 from app.models.course import Course
 from app.models.lesson import Lesson
 from app.models.user import User
-from app.schemas.lesson import LessonCreate, LessonUpdate, LessonResponse
+
+from app.schemas.lesson import (
+    LessonCreate,
+    LessonUpdate,
+    LessonResponse,
+)
 
 
 router = APIRouter(prefix="/lessons", tags=["Lessons"])
@@ -59,6 +67,7 @@ def create_lesson(
     return lesson
 
 
+# GET ALL ACCESSIBLE LESSONS FOR A COURSE
 @router.get(
     "/courses/{course_id}",
     response_model=list[LessonResponse],
@@ -70,19 +79,31 @@ def get_course_lessons(
 ):
     course = get_course_or_404(course_id, db)
 
-    if course.instructor_id == current_user.id:
+    is_owner = course.instructor_id == current_user.id
+
+    is_enrolled = has_learning_path_enrollment(
+        db=db,
+        course_id=course.id,
+        user_id=current_user.id,
+    )
+
+    # Instructors and enrolled learners can access all lessons.
+    if is_owner or (is_enrolled and course.is_published):
         statement = (
             select(Lesson)
             .where(Lesson.course_id == course_id)
             .order_by(Lesson.order_index)
         )
+
     else:
+        # Other learners can access published courses only.
         if not course.is_published:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Course not found.",
             )
 
+        # Non-enrolled learners can see preview lessons only.
         statement = (
             select(Lesson)
             .where(
@@ -95,6 +116,7 @@ def get_course_lessons(
     return db.scalars(statement).all()
 
 
+# GET A SPECIFIC LESSON
 @router.get(
     "/{lesson_id}",
     response_model=LessonResponse,
@@ -114,16 +136,40 @@ def get_lesson(
 
     course = get_course_or_404(lesson.course_id, db)
 
-    if course.instructor_id != current_user.id:
-        if not course.is_published or not lesson.is_preview:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Lesson not found.",
-            )
+    is_owner = course.instructor_id == current_user.id
+
+    is_enrolled = has_learning_path_enrollment(
+        db=db,
+        course_id=course.id,
+        user_id=current_user.id,
+    )
+
+    # Instructors can access all lessons.
+    if is_owner:
+        return lesson
+
+    # Other learners need a published course.
+    if not course.is_published:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lesson not found.",
+        )
+
+    # Enrolled learners can access all lessons.
+    if is_enrolled:
+        return lesson
+
+    # Non-enrolled learners can access preview lessons only.
+    if not lesson.is_preview:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lesson not found.",
+        )
 
     return lesson
 
 
+# UPDATE A LESSON
 @router.put(
     "/{lesson_id}",
     response_model=LessonResponse,
@@ -162,6 +208,7 @@ def update_lesson(
     return lesson
 
 
+# DELETE A LESSON
 @router.delete(
     "/{lesson_id}",
     status_code=status.HTTP_204_NO_CONTENT,
