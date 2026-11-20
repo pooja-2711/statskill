@@ -635,7 +635,306 @@ The quantity and form of assistance can depend on current government decisions a
   },
 ];
 
-const examItems: ModuleItem[] = [];
+
+type ExamSeed = {
+  id: string;
+  title: string;
+  category: string;
+  summary: string;
+  source: string;
+  url: string;
+  eligibility: string;
+  selection: string;
+  syllabus: string;
+};
+
+const createExamItem = (exam: ExamSeed): ModuleItem => ({
+  id: exam.id,
+  title: exam.title,
+  category: exam.category,
+  summary: exam.summary,
+  source: exam.source,
+  url: exam.url,
+  tags: [exam.category, "Government Exam", "Recruitment"],
+  body: `OVERVIEW
+${exam.summary}
+
+ELIGIBILITY
+${exam.eligibility}
+
+SELECTION PROCESS
+${exam.selection}
+
+SYLLABUS
+${exam.syllabus}
+
+IMPORTANT
+Age limits, educational qualifications, vacancies, examination patterns and other conditions can vary by recruitment cycle. Read the latest official notification before applying.`,
+  eligibility: [
+    exam.eligibility,
+    "Candidates must satisfy the age, nationality and other conditions in the current official notification.",
+    "Relaxations for reserved categories and other eligible groups are governed by the applicable recruitment rules.",
+  ],
+  applicationSteps: [
+    `Visit the official ${exam.source} website.`,
+    "Find the relevant examination notification and read it carefully.",
+    "Complete registration or sign in to the official application portal.",
+    "Enter the required personal, educational and other details.",
+    "Upload the documents and photograph/signature in the prescribed format.",
+    "Pay the application fee if applicable and submit the form.",
+    "Save or download the submitted application for future reference.",
+  ],
+  documents: [
+    "Recent passport-size photograph",
+    "Scanned signature",
+    "Valid photo identity proof",
+    "Educational qualification certificates and mark sheets",
+    "Date-of-birth proof",
+    "Category or reservation certificate, if applicable",
+  ],
+  faqs: [
+    {
+      question: "Where can I find the official notification?",
+      answer: `Visit the official ${exam.source} website using the link on this page. Check its examination or recruitment section.`,
+    },
+    {
+      question: "What is the eligibility for this examination?",
+      answer: exam.eligibility + " Check the latest notification for complete conditions.",
+    },
+    {
+      question: "What is the selection process?",
+      answer: exam.selection,
+    },
+    {
+      question: "Where can I find the syllabus?",
+      answer: exam.syllabus + " Refer to the official notification for the complete syllabus.",
+    },
+  ],
+});
+
+const examItems: ModuleItem[] = [
+  // UPSC
+  createExamItem({
+    id: "upsc-civil-services",
+    title: "UPSC Civil Services Examination (IAS, IPS, IFS)",
+    category: "UPSC",
+    summary: "National-level examination for recruitment to the Indian Administrative Service, Indian Police Service and other civil services.",
+    source: "UPSC",
+    url: "https://upsc.gov.in/",
+    eligibility: "A recognised bachelor's degree or an equivalent qualification is generally required. Age and attempt limits depend on the applicable category and examination rules.",
+    selection: "Civil Services Preliminary Examination, Main Examination (written), and Personality Test (interview).",
+    syllabus: "Prelims: General Studies and CSAT. Mains: Essay, General Studies papers, optional subject papers and qualifying language papers.",
+  }),
+  createExamItem({
+    id: "upsc-nda",
+    title: "UPSC National Defence Academy (NDA)",
+    category: "UPSC",
+    summary: "Entrance examination for admission to the Army, Navy and Air Force wings of the National Defence Academy.",
+    source: "UPSC",
+    url: "https://upsc.gov.in/",
+    eligibility: "Candidates must satisfy the prescribed age and unmarried status conditions. Educational requirements differ between Army and Air Force/Naval wings.",
+    selection: "Written examination followed by Services Selection Board (SSB) assessment and medical examination.",
+    syllabus: "Mathematics and General Ability Test covering English, Physics, Chemistry, General Science, History, Geography and Current Affairs.",
+  }),
+  createExamItem({
+    id: "upsc-cds",
+    title: "UPSC Combined Defence Services (CDS)",
+    category: "UPSC",
+    summary: "Recruitment examination for entry into the Indian Military Academy, Indian Naval Academy, Air Force Academy and Officers Training Academy.",
+    source: "UPSC",
+    url: "https://upsc.gov.in/",
+    eligibility: "A recognised degree is generally required for IMA and OTA. Engineering qualifications are required for INA, while Air Force entry has specific degree and subject requirements.",
+    selection: "Written examination, SSB interview and medical examination.",
+    syllabus: "English, General Knowledge and Elementary Mathematics. The OTA written examination includes English and General Knowledge.",
+  }),
+
+  // SSC
+  createExamItem({
+    id: "ssc-cgl",
+    title: "SSC Combined Graduate Level (CGL)",
+    category: "SSC",
+    summary: "Graduate-level recruitment examination for various Group B and Group C posts in central government departments.",
+    source: "SSC",
+    url: "https://ssc.gov.in/",
+    eligibility: "A bachelor's degree from a recognised university is generally required. Some posts have additional subject or qualification requirements.",
+    selection: "Computer-based examinations in multiple tiers, followed by document verification and other post-specific requirements.",
+    syllabus: "Quantitative Aptitude, General Intelligence and Reasoning, English, General Awareness and applicable computer or data-entry modules.",
+  }),
+  createExamItem({
+    id: "ssc-chsl",
+    title: "SSC Combined Higher Secondary Level (CHSL)",
+    category: "SSC",
+    summary: "Recruitment examination for posts such as Lower Division Clerk, Junior Secretariat Assistant and Data Entry Operator.",
+    source: "SSC",
+    url: "https://ssc.gov.in/",
+    eligibility: "Class 12 or equivalent qualification from a recognised board is generally required. Certain DEO posts may have additional subject requirements.",
+    selection: "Computer-based examination followed by a typing test or skill test, as applicable to the post.",
+    syllabus: "English Language, General Intelligence, Quantitative Aptitude, General Awareness, and applicable typing or data-entry skills.",
+  }),
+  createExamItem({
+    id: "ssc-mts",
+    title: "SSC Multi Tasking Staff (MTS)",
+    category: "SSC",
+    summary: "Recruitment examination for Multi Tasking Staff and other notified posts in central government offices.",
+    source: "SSC",
+    url: "https://ssc.gov.in/",
+    eligibility: "Matriculation or equivalent qualification is generally required. Age limits differ by post and category.",
+    selection: "Computer-based examination and, for applicable posts, a physical efficiency or standard test.",
+    syllabus: "Numerical and Mathematical Ability, Reasoning, General Awareness and English Language.",
+  }),
+  createExamItem({
+    id: "ssc-gd",
+    title: "SSC General Duty (GD) Constable",
+    category: "SSC",
+    summary: "Recruitment examination for Constable posts in notified Central Armed Police Forces and other participating organisations.",
+    source: "SSC",
+    url: "https://ssc.gov.in/",
+    eligibility: "Matriculation or equivalent qualification is generally required, along with prescribed physical and medical standards.",
+    selection: "Computer-based examination, Physical Efficiency Test, Physical Standard Test, medical examination and document verification.",
+    syllabus: "General Intelligence and Reasoning, General Knowledge and Awareness, Elementary Mathematics and English or Hindi.",
+  }),
+
+  // Banking
+  createExamItem({
+    id: "ibps-po",
+    title: "IBPS Probationary Officer (PO)",
+    category: "Banking",
+    summary: "Common recruitment process for Probationary Officer and Management Trainee positions in participating public sector banks.",
+    source: "IBPS",
+    url: "https://www.ibps.in/",
+    eligibility: "A bachelor's degree in any discipline from a recognised university is generally required, subject to the notification's conditions.",
+    selection: "Preliminary examination, Main examination and interview.",
+    syllabus: "English Language, Quantitative Aptitude, Reasoning, General and Banking Awareness, and applicable descriptive writing.",
+  }),
+  createExamItem({
+    id: "ibps-clerk",
+    title: "IBPS Customer Service Associate (Clerk)",
+    category: "Banking",
+    summary: "Common recruitment process for Customer Service Associate positions in participating public sector banks.",
+    source: "IBPS",
+    url: "https://www.ibps.in/",
+    eligibility: "A bachelor's degree is generally required. Computer knowledge and local language proficiency may be required under the notification.",
+    selection: "Preliminary examination and Main examination, followed by applicable language or document checks.",
+    syllabus: "English Language, Numerical Ability, Reasoning, General and Financial Awareness, and Computer Aptitude.",
+  }),
+  createExamItem({
+    id: "sbi-po",
+    title: "State Bank of India Probationary Officer (PO)",
+    category: "Banking",
+    summary: "Recruitment examination for Probationary Officer positions in the State Bank of India.",
+    source: "SBI Careers",
+    url: "https://sbi.co.in/web/careers",
+    eligibility: "A recognised bachelor's degree or an accepted equivalent qualification is generally required.",
+    selection: "Preliminary examination, Main examination, psychometric assessment where applicable, group exercise and interview.",
+    syllabus: "Reasoning, Quantitative Aptitude, English, Data Analysis and Interpretation, General and Banking Awareness, and descriptive English.",
+  }),
+  createExamItem({
+    id: "sbi-clerk",
+    title: "State Bank of India Junior Associate (Clerk)",
+    category: "Banking",
+    summary: "Recruitment examination for Junior Associate positions in customer support and sales at SBI.",
+    source: "SBI Careers",
+    url: "https://sbi.co.in/web/careers",
+    eligibility: "A bachelor's degree is generally required. Local language requirements apply as specified in the notification.",
+    selection: "Preliminary examination and Main examination, with a local language test where applicable.",
+    syllabus: "English, Numerical Ability, Reasoning, General and Financial Awareness and Computer Aptitude.",
+  }),
+
+  // Railways
+  createExamItem({
+    id: "rrb-ntpc",
+    title: "RRB Non-Technical Popular Categories (NTPC)",
+    category: "Railways",
+    summary: "Railway recruitment for notified graduate and undergraduate non-technical posts.",
+    source: "Railway Recruitment Boards",
+    url: "https://www.rrbapply.gov.in/",
+    eligibility: "Educational requirements vary between undergraduate and graduate posts. Age and other conditions are specified in each notification.",
+    selection: "Computer-based tests, followed by a typing skill test or aptitude test for applicable posts, document verification and medical examination.",
+    syllabus: "Mathematics, General Intelligence and Reasoning, and General Awareness.",
+  }),
+  createExamItem({
+    id: "rrb-group-d",
+    title: "RRB Group D (Level 1)",
+    category: "Railways",
+    summary: "Railway recruitment for various Level 1 posts in notified railway zones.",
+    source: "Railway Recruitment Boards",
+    url: "https://www.rrbapply.gov.in/",
+    eligibility: "Educational and technical requirements depend on the notified post and recruitment rules.",
+    selection: "Computer-based test, Physical Efficiency Test, document verification and medical examination.",
+    syllabus: "Mathematics, General Intelligence and Reasoning, General Science and General Awareness.",
+  }),
+  createExamItem({
+    id: "rrb-alp",
+    title: "RRB Assistant Loco Pilot (ALP)",
+    category: "Railways",
+    summary: "Recruitment examination for Assistant Loco Pilot positions in Indian Railways.",
+    source: "Railway Recruitment Boards",
+    url: "https://www.rrbapply.gov.in/",
+    eligibility: "Matriculation with the prescribed ITI, apprenticeship or relevant engineering diploma/degree qualification, as specified in the notification.",
+    selection: "Computer-based tests, Computer-Based Aptitude Test, document verification and medical examination.",
+    syllabus: "Mathematics, Mental Ability, General Science, General Awareness and relevant technical trade subjects.",
+  }),
+
+  // Karnataka State PSC
+  createExamItem({
+    id: "kpsc-kas",
+    title: "Karnataka Administrative Services (KAS)",
+    category: "State PSC",
+    summary: "KPSC recruitment examination for notified administrative and gazetted probationer posts in Karnataka.",
+    source: "Karnataka Public Service Commission",
+    url: "https://kpsc.kar.nic.in/",
+    eligibility: "A recognised bachelor's degree or equivalent qualification is generally required. Age, Kannada language and other conditions are governed by the notification.",
+    selection: "Preliminary examination, Main examination and Personality Test, according to the applicable recruitment rules.",
+    syllabus: "General Studies, Indian History, Geography, Indian Constitution, Economy, Science and Technology, Environment, Karnataka-specific topics and language papers.",
+  }),
+  createExamItem({
+    id: "kpsc-group-c",
+    title: "KPSC Group C Recruitment",
+    category: "State PSC",
+    summary: "Karnataka Public Service Commission recruitment for notified Group C technical and non-technical posts.",
+    source: "Karnataka Public Service Commission",
+    url: "https://kpsc.kar.nic.in/",
+    eligibility: "Educational and technical qualifications vary according to the specific Group C post. Kannada language and age conditions may apply.",
+    selection: "Written examination and document verification, with additional tests where specified for the post.",
+    syllabus: "General Knowledge, General Kannada, General English, mental ability and post-specific technical subjects where applicable.",
+  }),
+
+  // Defence
+  createExamItem({
+    id: "afcat",
+    title: "Air Force Common Admission Test (AFCAT)",
+    category: "Defence",
+    summary: "Indian Air Force examination for selection into notified Flying and Ground Duty branches.",
+    source: "AFCAT",
+    url: "https://afcat.cdac.in/",
+    eligibility: "Educational qualifications, subject requirements and age limits differ by branch and entry type.",
+    selection: "AFCAT written examination, Air Force Selection Board assessment and medical examination. Additional requirements apply to some entries.",
+    syllabus: "General Awareness, Verbal Ability in English, Numerical Ability, Reasoning and Military Aptitude.",
+  }),
+  createExamItem({
+    id: "army-agniveer",
+    title: "Indian Army Agniveer Recruitment",
+    category: "Defence",
+    summary: "Recruitment under the Agnipath scheme for notified Agniveer categories in the Indian Army.",
+    source: "Join Indian Army",
+    url: "https://joinindianarmy.nic.in/",
+    eligibility: "Age, education, physical standards and other requirements vary by Agniveer category and the current recruitment notification.",
+    selection: "Online Common Entrance Examination, recruitment rally and physical, medical and document checks as prescribed.",
+    syllabus: "General Knowledge, General Science, Mathematics and other subjects according to the selected Agniveer category.",
+  }),
+  createExamItem({
+    id: "navy-agniveer",
+    title: "Indian Navy Agniveer Recruitment",
+    category: "Defence",
+    summary: "Indian Navy recruitment for notified Agniveer SSR and MR entries.",
+    source: "Join Indian Navy",
+    url: "https://joinindiannavy.gov.in/",
+    eligibility: "Age, educational subjects and marks requirements differ between SSR and MR entries and are defined in each notification.",
+    selection: "Computer-based examination, physical fitness test, medical examination and document verification as applicable.",
+    syllabus: "SSR generally includes Science, Mathematics, English and General Awareness. MR includes Science and Mathematics, and General Awareness.",
+  }),
+];
+
 
 const CONTENT_CATEGORIES = [
   "Polity",
