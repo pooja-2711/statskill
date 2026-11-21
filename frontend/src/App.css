@@ -2297,10 +2297,11 @@
 }
 
 .lessons-page > h1 {
-  color: #111827;
-  font-size: 30px;
-  font-weight: 750;
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 800;
   margin-bottom: 8px;
+  letter-spacing: 0.3px;
 }
 
 .lessons-page > .muted {
@@ -2506,4 +2507,64 @@
   }
 }
 
+
+
+/* LEARNING PATH DETAILS - READABILITY AND SCROLLING FIX */
+
+.learning-path-details {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.learning-path-details h2,
+.learning-path-details h3 {
+  color: #111827 !important;
+}
+
+.learning-path-details .learning-detail-heading p {
+  color: #4b5563 !important;
+}
+
+.learning-course-list {
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 4px 8px 4px 0;
+}
+
+.learning-course-item {
+  background: #ffffff !important;
+  color: #374151 !important;
+}
+
+.learning-course-item span {
+  color: #374151 !important;
+}
+
+.learning-course-number {
+  color: #3730a3 !important;
+  background: #eef2ff !important;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .learning-path-details {
+    max-height: calc(100vh - 100px);
+    padding: 16px;
+  }
+
+  .learning-course-list {
+    max-height: 55vh;
+  }
+
+  .learning-detail-heading {
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    z-index: 2;
+    padding-bottom: 12px;
+  }
+}
 

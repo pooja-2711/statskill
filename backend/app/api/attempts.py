@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -86,6 +87,34 @@ def submit_attempt(
             detail="This quiz attempt has already been submitted.",
         )
 
+    quiz = db.get(Quiz, attempt.quiz_id)
+
+    if not quiz:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Quiz not found.",
+        )
+
+    # CHECK THE DEADLINE USING BACKEND SERVER TIME
+    now = datetime.now(timezone.utc)
+    time_expired = False
+
+    if quiz.time_limit_minutes is not None:
+        started_at = attempt.started_at
+
+        # SQLite may return a timezone-naive datetime.
+        # Interpret it as UTC so comparison is consistent.
+        if started_at.tzinfo is None:
+            started_at = started_at.replace(tzinfo=timezone.utc)
+        else:
+            started_at = started_at.astimezone(timezone.utc)
+
+        deadline = started_at + timedelta(
+            minutes=quiz.time_limit_minutes
+        )
+
+        time_expired = now >= deadline
+
     questions = db.scalars(
         select(Question).where(
             Question.quiz_id == attempt.quiz_id
@@ -108,19 +137,29 @@ def submit_attempt(
             detail="Duplicate question answers are not allowed.",
         )
 
-    question_map = {question.id: question for question in questions}
+    question_map = {
+        question.id: question for question in questions
+    }
 
     for answer in submission.answers:
         if answer.question_id not in question_map:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Question {answer.question_id} does not belong to this quiz.",
+                detail=(
+                    f"Question {answer.question_id} "
+                    "does not belong to this quiz."
+                ),
             )
 
     answer_map = {
         answer.question_id: answer.selected_answer
         for answer in submission.answers
     }
+
+    # If the deadline has passed, do not count submitted answers.
+    # The attempt will still be finalized and saved in history.
+    if time_expired:
+        answer_map = {}
 
     score = 0
     total_points = 0
@@ -149,15 +188,17 @@ def submit_attempt(
 
         db.add(answer_record)
 
-    percentage = round((score / total_points) * 100) if total_points > 0 else 0
-
-    quiz = db.get(Quiz, attempt.quiz_id)
+    percentage = (
+        round((score / total_points) * 100)
+        if total_points > 0
+        else 0
+    )
 
     attempt.score = score
     attempt.total_points = total_points
     attempt.percentage = percentage
     attempt.is_passed = percentage >= quiz.passing_score
-    attempt.submitted_at = datetime.now(timezone.utc)
+    attempt.submitted_at = now
 
     db.commit()
     db.refresh(attempt)
